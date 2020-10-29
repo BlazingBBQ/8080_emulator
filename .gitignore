@@ -1,4 +1,5 @@
 *.dSYM
+.vscode
 
 # Ignore 8080_main executable
 8080_main

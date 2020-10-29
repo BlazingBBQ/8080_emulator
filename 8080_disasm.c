@@ -1,9 +1,54 @@
 #include <stdio.h>
+#include <string.h>
 
-int disasm_unimplemented(unsigned char *codebuffer, unsigned int pc) {
-    printf("Unimplemented instruction at addr: %08x\n", pc);
-    return 1;
-}
+#define ARG_INDENT 8
+
+#define INSTR_BASE(name, size, format...)                           \
+    int disasm_##name(unsigned char *codebuffer, unsigned int pc) { \
+        unsigned char *codebyte = &codebuffer[pc];                  \
+        printf(format);                                             \
+        printf("\n");                                               \
+        return size;                                                \
+    }
+#define INSTR(name) INSTR_BASE(name, 1, #name)
+#define INSTR_R(name, r) \
+    INSTR_BASE(name, 1, #name "%*s%s", ARG_INDENT - (int)strlen(#name), "", #r)
+#define INSTR_R_R(name, r1, r2)                                             \
+    INSTR_BASE(name, 1, #name "%*s%s, %s", ARG_INDENT - (int)strlen(#name), \
+               "", #r1, #r2)
+#define INSTR_R_D8(name, r)                    \
+    INSTR_BASE(name, 2, #name "%*s%s, 0x%02x", \
+               ARG_INDENT - (int)strlen(#name), "", #r, codebyte[1])
+#define INSTR_R_D16(name, r)                                         \
+    INSTR_BASE(name, 3, #name "%*s%s, 0x%02x%02x",                   \
+               ARG_INDENT - (int)strlen(#name), "", #r, codebyte[2], \
+               codebyte[1])
+#define INSTR_D8(name)                                                      \
+    INSTR_BASE(name, 2, #name "%*s0x%02x", ARG_INDENT - (int)strlen(#name), \
+               "", codebyte[1])
+#define INSTR_D16(name)                        \
+    INSTR_BASE(name, 3, #name "%*s0x%02x%02x", \
+               ARG_INDENT - (int)strlen(#name), "", codebyte[2], codebyte[1])
+#define INSTR_ADDR(name)                       \
+    INSTR_BASE(name, 3, #name "%*s0x%02x%02x", \
+               ARG_INDENT - (int)strlen(#name), "", codebyte[2], codebyte[1])
+
+INSTR_BASE(unimplemented, 1, "Unimplemented opcode <%02x> at addr: %08x",
+           codebyte[0], pc)
+
+/* --- 8080 Instructions --- */
+
+INSTR(NOP)
+INSTR_R_D16(LXI, B)
+INSTR_R(STAX, B)
+INSTR_R(INX, B)
+INSTR_R(INR, B)
+INSTR_R(DCR, B)
+INSTR_R_D8(MVI, B)
+INSTR(RLC)
+// 0x08 --
+
+INSTR_ADDR(JMP)
 
 /*
  * disasm_handlers: Disassembly handler functions, indexed by opcode.
@@ -11,16 +56,16 @@ int disasm_unimplemented(unsigned char *codebuffer, unsigned int pc) {
  * Returns:
  *      Number of bytes to advance pc.
  */
-int (*disasm_handlers[256])(unsigned char *codebuffer,
-                            unsigned int pc) = {
-    disasm_unimplemented,  // 0x00
-    disasm_unimplemented,  // 0x01
-    disasm_unimplemented,  // 0x02
-    disasm_unimplemented,  // 0x03
-    disasm_unimplemented,  // 0x04
-    disasm_unimplemented,  // 0x05
-    disasm_unimplemented,  // 0x06
-    disasm_unimplemented,  // 0x07
+int (*disasm_handlers[0x100])(unsigned char *codebuffer,
+                              unsigned int pc) = {
+    disasm_NOP,            // 0x00
+    disasm_LXI,            // 0x01
+    disasm_STAX,           // 0x02
+    disasm_INX,            // 0x03
+    disasm_INR,            // 0x04
+    disasm_DCR,            // 0x05
+    disasm_MVI,            // 0x06
+    disasm_RLC,            // 0x07
     disasm_unimplemented,  // 0x08
     disasm_unimplemented,  // 0x09
     disasm_unimplemented,  // 0x0a
@@ -208,7 +253,7 @@ int (*disasm_handlers[256])(unsigned char *codebuffer,
     disasm_unimplemented,  // 0xc0
     disasm_unimplemented,  // 0xc1
     disasm_unimplemented,  // 0xc2
-    disasm_unimplemented,  // 0xc3
+    disasm_JMP,            // 0xc3
     disasm_unimplemented,  // 0xc4
     disasm_unimplemented,  // 0xc5
     disasm_unimplemented,  // 0xc6
