@@ -104,6 +104,69 @@ INSTR_R(DCR, A)
 INSTR_R_D8(MVI, A)
 INSTR(CMC)
 INSTR_R_R(MOV, B, B)
+INSTR_R_R(MOV, B, C)
+INSTR_R_R(MOV, B, D)
+INSTR_R_R(MOV, B, E)
+INSTR_R_R(MOV, B, H)
+INSTR_R_R(MOV, B, L)
+INSTR_R_R(MOV, B, M)
+INSTR_R_R(MOV, B, A)
+INSTR_R_R(MOV, C, B)
+INSTR_R_R(MOV, C, C)
+INSTR_R_R(MOV, C, D)
+INSTR_R_R(MOV, C, E)
+INSTR_R_R(MOV, C, H)
+INSTR_R_R(MOV, C, L)
+INSTR_R_R(MOV, C, M)
+INSTR_R_R(MOV, C, A)
+INSTR_R_R(MOV, D, B)
+INSTR_R_R(MOV, D, C)
+INSTR_R_R(MOV, D, D)
+INSTR_R_R(MOV, D, E)
+INSTR_R_R(MOV, D, H)
+INSTR_R_R(MOV, D, L)
+INSTR_R_R(MOV, D, M)
+INSTR_R_R(MOV, D, A)
+INSTR_R_R(MOV, E, B)
+INSTR_R_R(MOV, E, C)
+INSTR_R_R(MOV, E, D)
+INSTR_R_R(MOV, E, E)
+INSTR_R_R(MOV, E, H)
+INSTR_R_R(MOV, E, L)
+INSTR_R_R(MOV, E, M)
+INSTR_R_R(MOV, E, A)
+INSTR_R_R(MOV, H, B)
+INSTR_R_R(MOV, H, C)
+INSTR_R_R(MOV, H, D)
+INSTR_R_R(MOV, H, E)
+INSTR_R_R(MOV, H, H)
+INSTR_R_R(MOV, H, L)
+INSTR_R_R(MOV, H, M)
+INSTR_R_R(MOV, H, A)
+INSTR_R_R(MOV, L, B)
+INSTR_R_R(MOV, L, C)
+INSTR_R_R(MOV, L, D)
+INSTR_R_R(MOV, L, E)
+INSTR_R_R(MOV, L, H)
+INSTR_R_R(MOV, L, L)
+INSTR_R_R(MOV, L, M)
+INSTR_R_R(MOV, L, A)
+INSTR_R_R(MOV, M, B)
+INSTR_R_R(MOV, M, C)
+INSTR_R_R(MOV, M, D)
+INSTR_R_R(MOV, M, E)
+INSTR_R_R(MOV, M, H)
+INSTR_R_R(MOV, M, L)
+INSTR(HLT)
+INSTR_R_R(MOV, M, A)
+INSTR_R_R(MOV, A, B)
+INSTR_R_R(MOV, A, C)
+INSTR_R_R(MOV, A, D)
+INSTR_R_R(MOV, A, E)
+INSTR_R_R(MOV, A, H)
+INSTR_R_R(MOV, A, L)
+INSTR_R_R(MOV, A, M)
+INSTR_R_R(MOV, A, A)
 
 INSTR_ADDR(JMP)
 
@@ -180,69 +243,69 @@ int (*disasm_handlers[0x100])(unsigned char *codebuffer,
     disasm_MVI_A,          // 0x3e
     disasm_CMC,            // 0x3f
     disasm_MOV_B_B,        // 0x40
-    disasm_unimplemented,  // 0x41
-    disasm_unimplemented,  // 0x42
-    disasm_unimplemented,  // 0x43
-    disasm_unimplemented,  // 0x44
-    disasm_unimplemented,  // 0x45
-    disasm_unimplemented,  // 0x46
-    disasm_unimplemented,  // 0x47
-    disasm_unimplemented,  // 0x48
-    disasm_unimplemented,  // 0x49
-    disasm_unimplemented,  // 0x4a
-    disasm_unimplemented,  // 0x4b
-    disasm_unimplemented,  // 0x4c
-    disasm_unimplemented,  // 0x4d
-    disasm_unimplemented,  // 0x4e
-    disasm_unimplemented,  // 0x4f
-    disasm_unimplemented,  // 0x50
-    disasm_unimplemented,  // 0x51
-    disasm_unimplemented,  // 0x52
-    disasm_unimplemented,  // 0x53
-    disasm_unimplemented,  // 0x54
-    disasm_unimplemented,  // 0x55
-    disasm_unimplemented,  // 0x56
-    disasm_unimplemented,  // 0x57
-    disasm_unimplemented,  // 0x58
-    disasm_unimplemented,  // 0x59
-    disasm_unimplemented,  // 0x5a
-    disasm_unimplemented,  // 0x5b
-    disasm_unimplemented,  // 0x5c
-    disasm_unimplemented,  // 0x5d
-    disasm_unimplemented,  // 0x5e
-    disasm_unimplemented,  // 0x5f
-    disasm_unimplemented,  // 0x60
-    disasm_unimplemented,  // 0x61
-    disasm_unimplemented,  // 0x62
-    disasm_unimplemented,  // 0x63
-    disasm_unimplemented,  // 0x64
-    disasm_unimplemented,  // 0x65
-    disasm_unimplemented,  // 0x66
-    disasm_unimplemented,  // 0x67
-    disasm_unimplemented,  // 0x68
-    disasm_unimplemented,  // 0x69
-    disasm_unimplemented,  // 0x6a
-    disasm_unimplemented,  // 0x6b
-    disasm_unimplemented,  // 0x6c
-    disasm_unimplemented,  // 0x6d
-    disasm_unimplemented,  // 0x6e
-    disasm_unimplemented,  // 0x6f
-    disasm_unimplemented,  // 0x70
-    disasm_unimplemented,  // 0x71
-    disasm_unimplemented,  // 0x72
-    disasm_unimplemented,  // 0x73
-    disasm_unimplemented,  // 0x74
-    disasm_unimplemented,  // 0x75
-    disasm_unimplemented,  // 0x76
-    disasm_unimplemented,  // 0x77
-    disasm_unimplemented,  // 0x78
-    disasm_unimplemented,  // 0x79
-    disasm_unimplemented,  // 0x7a
-    disasm_unimplemented,  // 0x7b
-    disasm_unimplemented,  // 0x7c
-    disasm_unimplemented,  // 0x7d
-    disasm_unimplemented,  // 0x7e
-    disasm_unimplemented,  // 0x7f
+    disasm_MOV_B_C,        // 0x41
+    disasm_MOV_B_D,        // 0x42
+    disasm_MOV_B_E,        // 0x43
+    disasm_MOV_B_H,        // 0x44
+    disasm_MOV_B_L,        // 0x45
+    disasm_MOV_B_M,        // 0x46
+    disasm_MOV_B_A,        // 0x47
+    disasm_MOV_C_B,        // 0x48
+    disasm_MOV_C_C,        // 0x49
+    disasm_MOV_C_D,        // 0x4a
+    disasm_MOV_C_E,        // 0x4b
+    disasm_MOV_C_H,        // 0x4c
+    disasm_MOV_C_L,        // 0x4d
+    disasm_MOV_C_M,        // 0x4e
+    disasm_MOV_C_A,        // 0x4f
+    disasm_MOV_D_B,        // 0x50
+    disasm_MOV_D_C,        // 0x51
+    disasm_MOV_D_D,        // 0x52
+    disasm_MOV_D_E,        // 0x53
+    disasm_MOV_D_H,        // 0x54
+    disasm_MOV_D_L,        // 0x55
+    disasm_MOV_D_M,        // 0x56
+    disasm_MOV_D_A,        // 0x57
+    disasm_MOV_E_B,        // 0x58
+    disasm_MOV_E_C,        // 0x59
+    disasm_MOV_E_D,        // 0x5a
+    disasm_MOV_E_E,        // 0x5b
+    disasm_MOV_E_H,        // 0x5c
+    disasm_MOV_E_L,        // 0x5d
+    disasm_MOV_E_M,        // 0x5e
+    disasm_MOV_E_A,        // 0x5f
+    disasm_MOV_H_B,        // 0x60
+    disasm_MOV_H_C,        // 0x61
+    disasm_MOV_H_D,        // 0x62
+    disasm_MOV_H_E,        // 0x63
+    disasm_MOV_H_H,        // 0x64
+    disasm_MOV_H_L,        // 0x65
+    disasm_MOV_H_M,        // 0x66
+    disasm_MOV_H_A,        // 0x67
+    disasm_MOV_L_B,        // 0x68
+    disasm_MOV_L_C,        // 0x69
+    disasm_MOV_L_D,        // 0x6a
+    disasm_MOV_L_E,        // 0x6b
+    disasm_MOV_L_H,        // 0x6c
+    disasm_MOV_L_L,        // 0x6d
+    disasm_MOV_L_M,        // 0x6e
+    disasm_MOV_L_A,        // 0x6f
+    disasm_MOV_M_B,        // 0x70
+    disasm_MOV_M_C,        // 0x71
+    disasm_MOV_M_D,        // 0x72
+    disasm_MOV_M_E,        // 0x73
+    disasm_MOV_M_H,        // 0x74
+    disasm_MOV_M_L,        // 0x75
+    disasm_HLT,            // 0x76
+    disasm_MOV_M_A,        // 0x77
+    disasm_MOV_A_B,        // 0x78
+    disasm_MOV_A_C,        // 0x79
+    disasm_MOV_A_D,        // 0x7a
+    disasm_MOV_A_E,        // 0x7b
+    disasm_MOV_A_H,        // 0x7c
+    disasm_MOV_A_L,        // 0x7d
+    disasm_MOV_A_M,        // 0x7e
+    disasm_MOV_A_A,        // 0x7f
     disasm_unimplemented,  // 0x80
     disasm_unimplemented,  // 0x81
     disasm_unimplemented,  // 0x82
