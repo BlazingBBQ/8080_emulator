@@ -48,6 +48,62 @@ INSTR_R(DCR, B)
 INSTR_R_D8(MVI, B)
 INSTR(RLC)
 // 0x08 --
+INSTR_R(DAD, B)
+INSTR_R(LDAX, B)
+INSTR_R(DCX, B)
+INSTR_R(INR, C)
+INSTR_R(DCR, C)
+INSTR_R_D8(MVI, C)
+INSTR(RRC)
+// 0x10 --
+INSTR_R_D16(LXI, D)
+INSTR_R(STAX, D)
+INSTR_R(INX, D)
+INSTR_R(INR, D)
+INSTR_R(DCR, D)
+INSTR_R_D8(MVI, D)
+INSTR(RAL)
+// 0x18 --
+INSTR_R(DAD, D)
+INSTR_R(LDAX, D)
+INSTR_R(DCX, D)
+INSTR_R(INR, E)
+INSTR_R(DCR, E)
+INSTR_R_D8(MVI, E)
+INSTR(RAR)
+INSTR(RIM)
+INSTR_R_D16(LXI, H)
+INSTR_ADDR(SHLD)
+INSTR_R(INX, H)
+INSTR_R(INR, H)
+INSTR_R(DCR, H)
+INSTR_R_D8(MVI, H)
+INSTR(DAA)
+// 0x28 --
+INSTR_R(DAD, H)
+INSTR_ADDR(LHLD)
+INSTR_R(DCX, H)
+INSTR_R(INR, L)
+INSTR_R(DCR, L)
+INSTR_R_D8(MVI, L)
+INSTR(CMA)
+INSTR(SIM)
+INSTR_R_D16(LXI, SP)
+INSTR_ADDR(STA)
+INSTR_R(INX, SP)
+INSTR_R(INR, M)
+INSTR_R(DCR, M)
+INSTR_R_D8(MVI, M)
+INSTR(STC)
+// 0x38 --
+INSTR_R(DAD, SP)
+INSTR_ADDR(LDA)
+INSTR_R(DCX, SP)
+INSTR_R(INR, A)
+INSTR_R(DCR, A)
+INSTR_R_D8(MVI, A)
+INSTR(CMC)
+INSTR_R_R(MOV, B, B)
 
 INSTR_ADDR(JMP)
 
@@ -68,62 +124,62 @@ int (*disasm_handlers[0x100])(unsigned char *codebuffer,
     disasm_MVI_B,          // 0x06
     disasm_RLC,            // 0x07
     disasm_unimplemented,  // 0x08
-    disasm_unimplemented,  // 0x09
-    disasm_unimplemented,  // 0x0a
-    disasm_unimplemented,  // 0x0b
-    disasm_unimplemented,  // 0x0c
-    disasm_unimplemented,  // 0x0d
-    disasm_unimplemented,  // 0x0e
-    disasm_unimplemented,  // 0x0f
+    disasm_DAD_B,          // 0x09
+    disasm_LDAX_B,         // 0x0a
+    disasm_DCX_B,          // 0x0b
+    disasm_INR_C,          // 0x0c
+    disasm_DCR_C,          // 0x0d
+    disasm_MVI_C,          // 0x0e
+    disasm_RRC,            // 0x0f
     disasm_unimplemented,  // 0x10
-    disasm_unimplemented,  // 0x11
-    disasm_unimplemented,  // 0x12
-    disasm_unimplemented,  // 0x13
-    disasm_unimplemented,  // 0x14
-    disasm_unimplemented,  // 0x15
-    disasm_unimplemented,  // 0x16
-    disasm_unimplemented,  // 0x17
+    disasm_LXI_D,          // 0x11
+    disasm_STAX_D,         // 0x12
+    disasm_INX_D,          // 0x13
+    disasm_INR_D,          // 0x14
+    disasm_DCR_D,          // 0x15
+    disasm_MVI_D,          // 0x16
+    disasm_RAL,            // 0x17
     disasm_unimplemented,  // 0x18
-    disasm_unimplemented,  // 0x19
-    disasm_unimplemented,  // 0x1a
-    disasm_unimplemented,  // 0x1b
-    disasm_unimplemented,  // 0x1c
-    disasm_unimplemented,  // 0x1d
-    disasm_unimplemented,  // 0x1e
-    disasm_unimplemented,  // 0x1f
-    disasm_unimplemented,  // 0x20
-    disasm_unimplemented,  // 0x21
-    disasm_unimplemented,  // 0x22
-    disasm_unimplemented,  // 0x23
-    disasm_unimplemented,  // 0x24
-    disasm_unimplemented,  // 0x25
-    disasm_unimplemented,  // 0x26
-    disasm_unimplemented,  // 0x27
+    disasm_DAD_D,          // 0x19
+    disasm_LDAX_D,         // 0x1a
+    disasm_DCX_D,          // 0x1b
+    disasm_INR_E,          // 0x1c
+    disasm_DCR_E,          // 0x1d
+    disasm_MVI_E,          // 0x1e
+    disasm_RAR,            // 0x1f
+    disasm_RIM,            // 0x20
+    disasm_LXI_H,          // 0x21
+    disasm_SHLD,           // 0x22
+    disasm_INX_H,          // 0x23
+    disasm_INR_H,          // 0x24
+    disasm_DCR_H,          // 0x25
+    disasm_MVI_H,          // 0x26
+    disasm_DAA,            // 0x27
     disasm_unimplemented,  // 0x28
-    disasm_unimplemented,  // 0x29
-    disasm_unimplemented,  // 0x2a
-    disasm_unimplemented,  // 0x2b
-    disasm_unimplemented,  // 0x2c
-    disasm_unimplemented,  // 0x2d
-    disasm_unimplemented,  // 0x2e
-    disasm_unimplemented,  // 0x2f
-    disasm_unimplemented,  // 0x30
-    disasm_unimplemented,  // 0x31
-    disasm_unimplemented,  // 0x32
-    disasm_unimplemented,  // 0x33
-    disasm_unimplemented,  // 0x34
-    disasm_unimplemented,  // 0x35
-    disasm_unimplemented,  // 0x36
-    disasm_unimplemented,  // 0x37
+    disasm_DAD_H,          // 0x29
+    disasm_LHLD,           // 0x2a
+    disasm_DCX_H,          // 0x2b
+    disasm_INR_L,          // 0x2c
+    disasm_DCR_L,          // 0x2d
+    disasm_MVI_L,          // 0x2e
+    disasm_CMA,            // 0x2f
+    disasm_SIM,            // 0x30
+    disasm_LXI_SP,         // 0x31
+    disasm_STA,            // 0x32
+    disasm_INX_SP,         // 0x33
+    disasm_INR_M,          // 0x34
+    disasm_DCR_M,          // 0x35
+    disasm_MVI_M,          // 0x36
+    disasm_STC,            // 0x37
     disasm_unimplemented,  // 0x38
-    disasm_unimplemented,  // 0x39
-    disasm_unimplemented,  // 0x3a
-    disasm_unimplemented,  // 0x3b
-    disasm_unimplemented,  // 0x3c
-    disasm_unimplemented,  // 0x3d
-    disasm_unimplemented,  // 0x3e
-    disasm_unimplemented,  // 0x3f
-    disasm_unimplemented,  // 0x40
+    disasm_DAD_SP,         // 0x39
+    disasm_LDA,            // 0x3a
+    disasm_DCX_SP,         // 0x3b
+    disasm_INR_A,          // 0x3c
+    disasm_DCR_A,          // 0x3d
+    disasm_MVI_A,          // 0x3e
+    disasm_CMC,            // 0x3f
+    disasm_MOV_B_B,        // 0x40
     disasm_unimplemented,  // 0x41
     disasm_unimplemented,  // 0x42
     disasm_unimplemented,  // 0x43
