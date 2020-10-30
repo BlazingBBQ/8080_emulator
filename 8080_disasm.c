@@ -11,16 +11,17 @@
         return size;                                                \
     }
 #define INSTR(name) INSTR_BASE(name, 1, #name)
-#define INSTR_R(name, r) \
-    INSTR_BASE(name, 1, #name "%*s%s", ARG_INDENT - (int)strlen(#name), "", #r)
-#define INSTR_R_R(name, r1, r2)                                             \
-    INSTR_BASE(name, 1, #name "%*s%s, %s", ARG_INDENT - (int)strlen(#name), \
-               "", #r1, #r2)
-#define INSTR_R_D8(name, r)                    \
-    INSTR_BASE(name, 2, #name "%*s%s, 0x%02x", \
+#define INSTR_R(name, r)                                                      \
+    INSTR_BASE(name##_##r, 1, #name "%*s%s", ARG_INDENT - (int)strlen(#name), \
+               "", #r)
+#define INSTR_R_R(name, r1, r2)                          \
+    INSTR_BASE(name##_##r1##_##r2, 1, #name "%*s%s, %s", \
+               ARG_INDENT - (int)strlen(#name), "", #r1, #r2)
+#define INSTR_R_D8(name, r)                          \
+    INSTR_BASE(name##_##r, 2, #name "%*s%s, 0x%02x", \
                ARG_INDENT - (int)strlen(#name), "", #r, codebyte[1])
 #define INSTR_R_D16(name, r)                                         \
-    INSTR_BASE(name, 3, #name "%*s%s, 0x%02x%02x",                   \
+    INSTR_BASE(name##_##r, 3, #name "%*s%s, 0x%02x%02x",             \
                ARG_INDENT - (int)strlen(#name), "", #r, codebyte[2], \
                codebyte[1])
 #define INSTR_D8(name)                                                      \
@@ -59,12 +60,12 @@ INSTR_ADDR(JMP)
 int (*disasm_handlers[0x100])(unsigned char *codebuffer,
                               unsigned int pc) = {
     disasm_NOP,            // 0x00
-    disasm_LXI,            // 0x01
-    disasm_STAX,           // 0x02
-    disasm_INX,            // 0x03
-    disasm_INR,            // 0x04
-    disasm_DCR,            // 0x05
-    disasm_MVI,            // 0x06
+    disasm_LXI_B,          // 0x01
+    disasm_STAX_B,         // 0x02
+    disasm_INX_B,          // 0x03
+    disasm_INR_B,          // 0x04
+    disasm_DCR_B,          // 0x05
+    disasm_MVI_B,          // 0x06
     disasm_RLC,            // 0x07
     disasm_unimplemented,  // 0x08
     disasm_unimplemented,  // 0x09
