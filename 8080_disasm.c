@@ -167,6 +167,70 @@ INSTR_R_R(MOV, A, H)
 INSTR_R_R(MOV, A, L)
 INSTR_R_R(MOV, A, M)
 INSTR_R_R(MOV, A, A)
+INSTR_R(ADD, B)
+INSTR_R(ADD, C)
+INSTR_R(ADD, D)
+INSTR_R(ADD, E)
+INSTR_R(ADD, H)
+INSTR_R(ADD, L)
+INSTR_R(ADD, M)
+INSTR_R(ADD, A)
+INSTR_R(ADC, B)
+INSTR_R(ADC, C)
+INSTR_R(ADC, D)
+INSTR_R(ADC, E)
+INSTR_R(ADC, H)
+INSTR_R(ADC, L)
+INSTR_R(ADC, M)
+INSTR_R(ADC, A)
+INSTR_R(SUB, B)
+INSTR_R(SUB, C)
+INSTR_R(SUB, D)
+INSTR_R(SUB, E)
+INSTR_R(SUB, H)
+INSTR_R(SUB, L)
+INSTR_R(SUB, M)
+INSTR_R(SUB, A)
+INSTR_R(SBB, B)
+INSTR_R(SBB, C)
+INSTR_R(SBB, D)
+INSTR_R(SBB, E)
+INSTR_R(SBB, H)
+INSTR_R(SBB, L)
+INSTR_R(SBB, M)
+INSTR_R(SBB, A)
+INSTR_R(ANA, B)
+INSTR_R(ANA, C)
+INSTR_R(ANA, D)
+INSTR_R(ANA, E)
+INSTR_R(ANA, H)
+INSTR_R(ANA, L)
+INSTR_R(ANA, M)
+INSTR_R(ANA, A)
+INSTR_R(XRA, B)
+INSTR_R(XRA, C)
+INSTR_R(XRA, D)
+INSTR_R(XRA, E)
+INSTR_R(XRA, H)
+INSTR_R(XRA, L)
+INSTR_R(XRA, M)
+INSTR_R(XRA, A)
+INSTR_R(ORA, B)
+INSTR_R(ORA, C)
+INSTR_R(ORA, D)
+INSTR_R(ORA, E)
+INSTR_R(ORA, H)
+INSTR_R(ORA, L)
+INSTR_R(ORA, M)
+INSTR_R(ORA, A)
+INSTR_R(CMP, B)
+INSTR_R(CMP, C)
+INSTR_R(CMP, D)
+INSTR_R(CMP, E)
+INSTR_R(CMP, H)
+INSTR_R(CMP, L)
+INSTR_R(CMP, M)
+INSTR_R(CMP, A)
 
 INSTR_ADDR(JMP)
 
@@ -306,70 +370,70 @@ int (*disasm_handlers[0x100])(unsigned char *codebuffer,
     disasm_MOV_A_L,        // 0x7d
     disasm_MOV_A_M,        // 0x7e
     disasm_MOV_A_A,        // 0x7f
-    disasm_unimplemented,  // 0x80
-    disasm_unimplemented,  // 0x81
-    disasm_unimplemented,  // 0x82
-    disasm_unimplemented,  // 0x83
-    disasm_unimplemented,  // 0x84
-    disasm_unimplemented,  // 0x85
-    disasm_unimplemented,  // 0x86
-    disasm_unimplemented,  // 0x87
-    disasm_unimplemented,  // 0x88
-    disasm_unimplemented,  // 0x89
-    disasm_unimplemented,  // 0x8a
-    disasm_unimplemented,  // 0x8b
-    disasm_unimplemented,  // 0x8c
-    disasm_unimplemented,  // 0x8d
-    disasm_unimplemented,  // 0x8e
-    disasm_unimplemented,  // 0x8f
-    disasm_unimplemented,  // 0x90
-    disasm_unimplemented,  // 0x91
-    disasm_unimplemented,  // 0x92
-    disasm_unimplemented,  // 0x93
-    disasm_unimplemented,  // 0x94
-    disasm_unimplemented,  // 0x95
-    disasm_unimplemented,  // 0x96
-    disasm_unimplemented,  // 0x97
-    disasm_unimplemented,  // 0x98
-    disasm_unimplemented,  // 0x99
-    disasm_unimplemented,  // 0x9a
-    disasm_unimplemented,  // 0x9b
-    disasm_unimplemented,  // 0x9c
-    disasm_unimplemented,  // 0x9d
-    disasm_unimplemented,  // 0x9e
-    disasm_unimplemented,  // 0x9f
-    disasm_unimplemented,  // 0xa0
-    disasm_unimplemented,  // 0xa1
-    disasm_unimplemented,  // 0xa2
-    disasm_unimplemented,  // 0xa3
-    disasm_unimplemented,  // 0xa4
-    disasm_unimplemented,  // 0xa5
-    disasm_unimplemented,  // 0xa6
-    disasm_unimplemented,  // 0xa7
-    disasm_unimplemented,  // 0xa8
-    disasm_unimplemented,  // 0xa9
-    disasm_unimplemented,  // 0xaa
-    disasm_unimplemented,  // 0xab
-    disasm_unimplemented,  // 0xac
-    disasm_unimplemented,  // 0xad
-    disasm_unimplemented,  // 0xae
-    disasm_unimplemented,  // 0xaf
-    disasm_unimplemented,  // 0xb0
-    disasm_unimplemented,  // 0xb1
-    disasm_unimplemented,  // 0xb2
-    disasm_unimplemented,  // 0xb3
-    disasm_unimplemented,  // 0xb4
-    disasm_unimplemented,  // 0xb5
-    disasm_unimplemented,  // 0xb6
-    disasm_unimplemented,  // 0xb7
-    disasm_unimplemented,  // 0xb8
-    disasm_unimplemented,  // 0xb9
-    disasm_unimplemented,  // 0xba
-    disasm_unimplemented,  // 0xbb
-    disasm_unimplemented,  // 0xbc
-    disasm_unimplemented,  // 0xbd
-    disasm_unimplemented,  // 0xbe
-    disasm_unimplemented,  // 0xbf
+    disasm_ADD_B,          // 0x80
+    disasm_ADD_C,          // 0x81
+    disasm_ADD_D,          // 0x82
+    disasm_ADD_E,          // 0x83
+    disasm_ADD_H,          // 0x84
+    disasm_ADD_L,          // 0x85
+    disasm_ADD_M,          // 0x86
+    disasm_ADD_A,          // 0x87
+    disasm_ADC_B,          // 0x88
+    disasm_ADC_C,          // 0x89
+    disasm_ADC_D,          // 0x8a
+    disasm_ADC_E,          // 0x8b
+    disasm_ADC_H,          // 0x8c
+    disasm_ADC_L,          // 0x8d
+    disasm_ADC_M,          // 0x8e
+    disasm_ADC_A,          // 0x8f
+    disasm_SUB_B,          // 0x90
+    disasm_SUB_C,          // 0x91
+    disasm_SUB_D,          // 0x92
+    disasm_SUB_E,          // 0x93
+    disasm_SUB_H,          // 0x94
+    disasm_SUB_L,          // 0x95
+    disasm_SUB_M,          // 0x96
+    disasm_SUB_A,          // 0x97
+    disasm_SBB_B,          // 0x98
+    disasm_SBB_C,          // 0x99
+    disasm_SBB_D,          // 0x9a
+    disasm_SBB_E,          // 0x9b
+    disasm_SBB_H,          // 0x9c
+    disasm_SBB_L,          // 0x9d
+    disasm_SBB_M,          // 0x9e
+    disasm_SBB_A,          // 0x9f
+    disasm_ANA_B,          // 0xa0
+    disasm_ANA_C,          // 0xa1
+    disasm_ANA_D,          // 0xa2
+    disasm_ANA_E,          // 0xa3
+    disasm_ANA_H,          // 0xa4
+    disasm_ANA_L,          // 0xa5
+    disasm_ANA_M,          // 0xa6
+    disasm_ANA_A,          // 0xa7
+    disasm_XRA_B,          // 0xa8
+    disasm_XRA_C,          // 0xa9
+    disasm_XRA_D,          // 0xaa
+    disasm_XRA_E,          // 0xab
+    disasm_XRA_H,          // 0xac
+    disasm_XRA_L,          // 0xad
+    disasm_XRA_M,          // 0xae
+    disasm_XRA_A,          // 0xaf
+    disasm_ORA_B,          // 0xb0
+    disasm_ORA_C,          // 0xb1
+    disasm_ORA_D,          // 0xb2
+    disasm_ORA_E,          // 0xb3
+    disasm_ORA_H,          // 0xb4
+    disasm_ORA_L,          // 0xb5
+    disasm_ORA_M,          // 0xb6
+    disasm_ORA_A,          // 0xb7
+    disasm_CMP_B,          // 0xb8
+    disasm_CMP_C,          // 0xb9
+    disasm_CMP_D,          // 0xba
+    disasm_CMP_E,          // 0xbb
+    disasm_CMP_H,          // 0xbc
+    disasm_CMP_L,          // 0xbd
+    disasm_CMP_M,          // 0xbe
+    disasm_CMP_A,          // 0xbf
     disasm_unimplemented,  // 0xc0
     disasm_unimplemented,  // 0xc1
     disasm_unimplemented,  // 0xc2
