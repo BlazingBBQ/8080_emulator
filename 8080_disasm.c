@@ -11,6 +11,11 @@
         return size;                                                \
     }
 #define INSTR(name) INSTR_BASE(name, 1, #name)
+#define INSTR_RST(num)       \
+    INSTR_BASE(RST_##num, 1, \
+               "RST"         \
+               "%*s%s",      \
+               ARG_INDENT - (int)strlen("RST"), "", #num)
 #define INSTR_R(name, r)                                                      \
     INSTR_BASE(name##_##r, 1, #name "%*s%s", ARG_INDENT - (int)strlen(#name), \
                "", #r)
@@ -231,8 +236,70 @@ INSTR_R(CMP, H)
 INSTR_R(CMP, L)
 INSTR_R(CMP, M)
 INSTR_R(CMP, A)
-
+INSTR(RNZ)
+INSTR_R(POP, B)
+INSTR_ADDR(JNZ)
 INSTR_ADDR(JMP)
+INSTR_ADDR(CNZ)
+INSTR_R(PUSH, B)
+INSTR_D8(ADI)
+INSTR_RST(0)
+INSTR(RZ)
+INSTR(RET)
+INSTR_ADDR(JZ)
+// 0xcb --
+INSTR_ADDR(CZ)
+INSTR_ADDR(CALL)
+INSTR_D8(ACI)
+INSTR_RST(1)
+INSTR(RNC)
+INSTR_R(POP, D)
+INSTR_ADDR(JNC)
+INSTR_D8(OUT)
+INSTR_ADDR(CNC)
+INSTR_R(PUSH, D)
+INSTR_D8(SUI)
+INSTR_RST(2)
+INSTR(RC)
+// 0xd9 --
+INSTR_ADDR(JC)
+INSTR_D8(IN)
+INSTR_ADDR(CC)
+// 0xdd --
+INSTR_D8(SBI)
+INSTR_RST(3)
+INSTR(RPO)
+INSTR_R(POP, H)
+INSTR_ADDR(JPO)
+INSTR(XTHL)
+INSTR_ADDR(CPO)
+INSTR_R(PUSH, H)
+INSTR_D8(ANI)
+INSTR_RST(4)
+INSTR(RPE)
+INSTR(PCHL)
+INSTR_ADDR(JPE)
+INSTR(XCHG)
+INSTR_ADDR(CPE)
+// 0xed --
+INSTR_D8(XRI)
+INSTR_RST(5)
+INSTR(RP)
+INSTR_R(POP, PSW)
+INSTR_ADDR(JP)
+INSTR(DI)
+INSTR_ADDR(CP)
+INSTR_R(PUSH, PSW)
+INSTR_D8(ORI)
+INSTR_RST(6)
+INSTR(RM)
+INSTR(SPHL)
+INSTR_ADDR(JM)
+INSTR(EI)
+INSTR_ADDR(CM)
+// 0xfc --
+INSTR_D8(CPI)
+INSTR_RST(7)
 
 /*
  * disasm_handlers: Disassembly handler functions, indexed by opcode.
@@ -434,68 +501,68 @@ int (*disasm_handlers[0x100])(unsigned char *codebuffer,
     disasm_CMP_L,          // 0xbd
     disasm_CMP_M,          // 0xbe
     disasm_CMP_A,          // 0xbf
-    disasm_unimplemented,  // 0xc0
-    disasm_unimplemented,  // 0xc1
-    disasm_unimplemented,  // 0xc2
+    disasm_RNZ,            // 0xc0
+    disasm_POP_B,          // 0xc1
+    disasm_JNZ,            // 0xc2
     disasm_JMP,            // 0xc3
-    disasm_unimplemented,  // 0xc4
-    disasm_unimplemented,  // 0xc5
-    disasm_unimplemented,  // 0xc6
-    disasm_unimplemented,  // 0xc7
-    disasm_unimplemented,  // 0xc8
-    disasm_unimplemented,  // 0xc9
-    disasm_unimplemented,  // 0xca
+    disasm_CNZ,            // 0xc4
+    disasm_PUSH_B,         // 0xc5
+    disasm_ADI,            // 0xc6
+    disasm_RST_0,          // 0xc7
+    disasm_RZ,             // 0xc8
+    disasm_RET,            // 0xc9
+    disasm_JZ,             // 0xca
     disasm_unimplemented,  // 0xcb
-    disasm_unimplemented,  // 0xcc
-    disasm_unimplemented,  // 0xcd
-    disasm_unimplemented,  // 0xce
-    disasm_unimplemented,  // 0xcf
-    disasm_unimplemented,  // 0xd0
-    disasm_unimplemented,  // 0xd1
-    disasm_unimplemented,  // 0xd2
-    disasm_unimplemented,  // 0xd3
-    disasm_unimplemented,  // 0xd4
-    disasm_unimplemented,  // 0xd5
-    disasm_unimplemented,  // 0xd6
-    disasm_unimplemented,  // 0xd7
-    disasm_unimplemented,  // 0xd8
+    disasm_CZ,             // 0xcc
+    disasm_CALL,           // 0xcd
+    disasm_ACI,            // 0xce
+    disasm_RST_1,          // 0xcf
+    disasm_RNC,            // 0xd0
+    disasm_POP_D,          // 0xd1
+    disasm_JNC,            // 0xd2
+    disasm_OUT,            // 0xd3
+    disasm_CNC,            // 0xd4
+    disasm_PUSH_D,         // 0xd5
+    disasm_SUI,            // 0xd6
+    disasm_RST_2,          // 0xd7
+    disasm_RC,             // 0xd8
     disasm_unimplemented,  // 0xd9
-    disasm_unimplemented,  // 0xda
-    disasm_unimplemented,  // 0xdb
-    disasm_unimplemented,  // 0xdc
+    disasm_JC,             // 0xda
+    disasm_IN,             // 0xdb
+    disasm_CC,             // 0xdc
     disasm_unimplemented,  // 0xdd
-    disasm_unimplemented,  // 0xde
-    disasm_unimplemented,  // 0xdf
-    disasm_unimplemented,  // 0xe0
-    disasm_unimplemented,  // 0xe1
-    disasm_unimplemented,  // 0xe2
-    disasm_unimplemented,  // 0xe3
-    disasm_unimplemented,  // 0xe4
-    disasm_unimplemented,  // 0xe5
-    disasm_unimplemented,  // 0xe6
-    disasm_unimplemented,  // 0xe7
-    disasm_unimplemented,  // 0xe8
-    disasm_unimplemented,  // 0xe9
-    disasm_unimplemented,  // 0xea
-    disasm_unimplemented,  // 0xeb
-    disasm_unimplemented,  // 0xec
+    disasm_SBI,            // 0xde
+    disasm_RST_3,          // 0xdf
+    disasm_RPO,            // 0xe0
+    disasm_POP_H,          // 0xe1
+    disasm_JPO,            // 0xe2
+    disasm_XTHL,           // 0xe3
+    disasm_CPO,            // 0xe4
+    disasm_PUSH_H,         // 0xe5
+    disasm_ANI,            // 0xe6
+    disasm_RST_4,          // 0xe7
+    disasm_RPE,            // 0xe8
+    disasm_PCHL,           // 0xe9
+    disasm_JPE,            // 0xea
+    disasm_XCHG,           // 0xeb
+    disasm_CPE,            // 0xec
     disasm_unimplemented,  // 0xed
-    disasm_unimplemented,  // 0xee
-    disasm_unimplemented,  // 0xef
-    disasm_unimplemented,  // 0xf0
-    disasm_unimplemented,  // 0xf1
-    disasm_unimplemented,  // 0xf2
-    disasm_unimplemented,  // 0xf3
-    disasm_unimplemented,  // 0xf4
-    disasm_unimplemented,  // 0xf5
-    disasm_unimplemented,  // 0xf6
-    disasm_unimplemented,  // 0xf7
-    disasm_unimplemented,  // 0xf8
-    disasm_unimplemented,  // 0xf9
-    disasm_unimplemented,  // 0xfa
-    disasm_unimplemented,  // 0xfb
-    disasm_unimplemented,  // 0xfc
+    disasm_XRI,            // 0xee
+    disasm_RST_5,          // 0xef
+    disasm_RP,             // 0xf0
+    disasm_POP_PSW,        // 0xf1
+    disasm_JP,             // 0xf2
+    disasm_DI,             // 0xf3
+    disasm_CP,             // 0xf4
+    disasm_PUSH_PSW,       // 0xf5
+    disasm_ORI,            // 0xf6
+    disasm_RST_6,          // 0xf7
+    disasm_RM,             // 0xf8
+    disasm_SPHL,           // 0xf9
+    disasm_JM,             // 0xfa
+    disasm_EI,             // 0xfb
+    disasm_CM,             // 0xfc
     disasm_unimplemented,  // 0xfd
-    disasm_unimplemented,  // 0xfe
-    disasm_unimplemented   // 0xff
+    disasm_CPI,            // 0xfe
+    disasm_RST_7           // 0xff
 };
