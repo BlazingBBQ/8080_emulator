@@ -6,6 +6,9 @@
         exit(1);                   \
     }
 
+/* The content of the memory location, whose address is in registers H and L. */
+#define MEM_HL (*(state->mem + (state->h << sizeof(uint8_t)) + state->l))
+
 typedef struct {
     uint8_t z : 1;    // Zero
     uint8_t s : 1;    // Sign
@@ -31,7 +34,13 @@ typedef struct {
 
 EMU_UNIMPLEMENTED(emu_unimplemented)
 
-EMU_UNIMPLEMENTED(emu_NOP)
+/* --- 8080 Instructions --- */
+
+int emu_NOP(emu_state_t *state) {
+    (void)(state);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_LXI_B)
 EMU_UNIMPLEMENTED(emu_STAX_B)
 EMU_UNIMPLEMENTED(emu_INX_B)
@@ -95,70 +104,324 @@ EMU_UNIMPLEMENTED(emu_INR_A)
 EMU_UNIMPLEMENTED(emu_DCR_A)
 EMU_UNIMPLEMENTED(emu_MVI_A)
 EMU_UNIMPLEMENTED(emu_CMC)
-EMU_UNIMPLEMENTED(emu_MOV_B_B)
-EMU_UNIMPLEMENTED(emu_MOV_B_C)
-EMU_UNIMPLEMENTED(emu_MOV_B_D)
-EMU_UNIMPLEMENTED(emu_MOV_B_E)
-EMU_UNIMPLEMENTED(emu_MOV_B_H)
-EMU_UNIMPLEMENTED(emu_MOV_B_L)
-EMU_UNIMPLEMENTED(emu_MOV_B_M)
-EMU_UNIMPLEMENTED(emu_MOV_B_A)
-EMU_UNIMPLEMENTED(emu_MOV_C_B)
-EMU_UNIMPLEMENTED(emu_MOV_C_C)
-EMU_UNIMPLEMENTED(emu_MOV_C_D)
-EMU_UNIMPLEMENTED(emu_MOV_C_E)
-EMU_UNIMPLEMENTED(emu_MOV_C_H)
-EMU_UNIMPLEMENTED(emu_MOV_C_L)
-EMU_UNIMPLEMENTED(emu_MOV_C_M)
-EMU_UNIMPLEMENTED(emu_MOV_C_A)
-EMU_UNIMPLEMENTED(emu_MOV_D_B)
-EMU_UNIMPLEMENTED(emu_MOV_D_C)
-EMU_UNIMPLEMENTED(emu_MOV_D_D)
-EMU_UNIMPLEMENTED(emu_MOV_D_E)
-EMU_UNIMPLEMENTED(emu_MOV_D_H)
-EMU_UNIMPLEMENTED(emu_MOV_D_L)
-EMU_UNIMPLEMENTED(emu_MOV_D_M)
-EMU_UNIMPLEMENTED(emu_MOV_D_A)
-EMU_UNIMPLEMENTED(emu_MOV_E_B)
-EMU_UNIMPLEMENTED(emu_MOV_E_C)
-EMU_UNIMPLEMENTED(emu_MOV_E_D)
-EMU_UNIMPLEMENTED(emu_MOV_E_E)
-EMU_UNIMPLEMENTED(emu_MOV_E_H)
-EMU_UNIMPLEMENTED(emu_MOV_E_L)
-EMU_UNIMPLEMENTED(emu_MOV_E_M)
-EMU_UNIMPLEMENTED(emu_MOV_E_A)
-EMU_UNIMPLEMENTED(emu_MOV_H_B)
-EMU_UNIMPLEMENTED(emu_MOV_H_C)
-EMU_UNIMPLEMENTED(emu_MOV_H_D)
-EMU_UNIMPLEMENTED(emu_MOV_H_E)
-EMU_UNIMPLEMENTED(emu_MOV_H_H)
-EMU_UNIMPLEMENTED(emu_MOV_H_L)
-EMU_UNIMPLEMENTED(emu_MOV_H_M)
-EMU_UNIMPLEMENTED(emu_MOV_H_A)
-EMU_UNIMPLEMENTED(emu_MOV_L_B)
-EMU_UNIMPLEMENTED(emu_MOV_L_C)
-EMU_UNIMPLEMENTED(emu_MOV_L_D)
-EMU_UNIMPLEMENTED(emu_MOV_L_E)
-EMU_UNIMPLEMENTED(emu_MOV_L_H)
-EMU_UNIMPLEMENTED(emu_MOV_L_L)
-EMU_UNIMPLEMENTED(emu_MOV_L_M)
-EMU_UNIMPLEMENTED(emu_MOV_L_A)
-EMU_UNIMPLEMENTED(emu_MOV_M_B)
-EMU_UNIMPLEMENTED(emu_MOV_M_C)
-EMU_UNIMPLEMENTED(emu_MOV_M_D)
-EMU_UNIMPLEMENTED(emu_MOV_M_E)
-EMU_UNIMPLEMENTED(emu_MOV_M_H)
-EMU_UNIMPLEMENTED(emu_MOV_M_L)
+
+int emu_MOV_B_B(emu_state_t *state) {
+    state->b = state->b;
+    return 1;
+}
+
+int emu_MOV_B_C(emu_state_t *state) {
+    state->b = state->c;
+    return 1;
+}
+
+int emu_MOV_B_D(emu_state_t *state) {
+    state->b = state->d;
+    return 1;
+}
+
+int emu_MOV_B_E(emu_state_t *state) {
+    state->b = state->e;
+    return 1;
+}
+
+int emu_MOV_B_H(emu_state_t *state) {
+    state->b = state->h;
+    return 1;
+}
+
+int emu_MOV_B_L(emu_state_t *state) {
+    state->b = state->l;
+    return 1;
+}
+
+int emu_MOV_B_M(emu_state_t *state) {
+    state->b = MEM_HL;
+    return 1;
+}
+
+int emu_MOV_B_A(emu_state_t *state) {
+    state->b = state->a;
+    return 1;
+}
+
+int emu_MOV_C_B(emu_state_t *state) {
+    state->c = state->b;
+    return 1;
+}
+
+int emu_MOV_C_C(emu_state_t *state) {
+    state->c = state->c;
+    return 1;
+}
+
+int emu_MOV_C_D(emu_state_t *state) {
+    state->c = state->d;
+    return 1;
+}
+
+int emu_MOV_C_E(emu_state_t *state) {
+    state->c = state->e;
+    return 1;
+}
+
+int emu_MOV_C_H(emu_state_t *state) {
+    state->c = state->h;
+    return 1;
+}
+
+int emu_MOV_C_L(emu_state_t *state) {
+    state->c = state->l;
+    return 1;
+}
+
+int emu_MOV_C_M(emu_state_t *state) {
+    state->c = MEM_HL;
+    return 1;
+}
+
+int emu_MOV_C_A(emu_state_t *state) {
+    state->c = state->a;
+    return 1;
+}
+
+int emu_MOV_D_B(emu_state_t *state) {
+    state->d = state->b;
+    return 1;
+}
+
+int emu_MOV_D_C(emu_state_t *state) {
+    state->d = state->c;
+    return 1;
+}
+
+int emu_MOV_D_D(emu_state_t *state) {
+    state->d = state->d;
+    return 1;
+}
+
+int emu_MOV_D_E(emu_state_t *state) {
+    state->d = state->e;
+    return 1;
+}
+
+int emu_MOV_D_H(emu_state_t *state) {
+    state->d = state->h;
+    return 1;
+}
+
+int emu_MOV_D_L(emu_state_t *state) {
+    state->d = state->l;
+    return 1;
+}
+
+int emu_MOV_D_M(emu_state_t *state) {
+    state->d = MEM_HL;
+    return 1;
+}
+
+int emu_MOV_D_A(emu_state_t *state) {
+    state->d = state->a;
+    return 1;
+}
+
+int emu_MOV_E_B(emu_state_t *state) {
+    state->e = state->b;
+    return 1;
+}
+
+int emu_MOV_E_C(emu_state_t *state) {
+    state->e = state->c;
+    return 1;
+}
+
+int emu_MOV_E_D(emu_state_t *state) {
+    state->e = state->d;
+    return 1;
+}
+
+int emu_MOV_E_E(emu_state_t *state) {
+    state->e = state->e;
+    return 1;
+}
+
+int emu_MOV_E_H(emu_state_t *state) {
+    state->e = state->h;
+    return 1;
+}
+
+int emu_MOV_E_L(emu_state_t *state) {
+    state->e = state->l;
+    return 1;
+}
+
+int emu_MOV_E_M(emu_state_t *state) {
+    state->e = MEM_HL;
+    return 1;
+}
+
+int emu_MOV_E_A(emu_state_t *state) {
+    state->e = state->a;
+    return 1;
+}
+
+int emu_MOV_H_B(emu_state_t *state) {
+    state->h = state->b;
+    return 1;
+}
+
+int emu_MOV_H_C(emu_state_t *state) {
+    state->h = state->c;
+    return 1;
+}
+
+int emu_MOV_H_D(emu_state_t *state) {
+    state->h = state->d;
+    return 1;
+}
+
+int emu_MOV_H_E(emu_state_t *state) {
+    state->h = state->e;
+    return 1;
+}
+
+int emu_MOV_H_H(emu_state_t *state) {
+    state->h = state->h;
+    return 1;
+}
+
+int emu_MOV_H_L(emu_state_t *state) {
+    state->h = state->l;
+    return 1;
+}
+
+int emu_MOV_H_M(emu_state_t *state) {
+    state->h = MEM_HL;
+    return 1;
+}
+
+int emu_MOV_H_A(emu_state_t *state) {
+    state->h = state->a;
+    return 1;
+}
+
+int emu_MOV_L_B(emu_state_t *state) {
+    state->l = state->b;
+    return 1;
+}
+
+int emu_MOV_L_C(emu_state_t *state) {
+    state->l = state->c;
+    return 1;
+}
+
+int emu_MOV_L_D(emu_state_t *state) {
+    state->l = state->d;
+    return 1;
+}
+
+int emu_MOV_L_E(emu_state_t *state) {
+    state->l = state->e;
+    return 1;
+}
+
+int emu_MOV_L_H(emu_state_t *state) {
+    state->l = state->h;
+    return 1;
+}
+
+int emu_MOV_L_L(emu_state_t *state) {
+    state->l = state->l;
+    return 1;
+}
+
+int emu_MOV_L_M(emu_state_t *state) {
+    state->l = MEM_HL;
+    return 1;
+}
+
+int emu_MOV_L_A(emu_state_t *state) {
+    state->l = state->a;
+    return 1;
+}
+
+int emu_MOV_M_B(emu_state_t *state) {
+    MEM_HL = state->b;
+    return 1;
+}
+
+int emu_MOV_M_C(emu_state_t *state) {
+    MEM_HL = state->c;
+    return 1;
+}
+
+int emu_MOV_M_D(emu_state_t *state) {
+    MEM_HL = state->d;
+    return 1;
+}
+
+int emu_MOV_M_E(emu_state_t *state) {
+    MEM_HL = state->e;
+    return 1;
+}
+
+int emu_MOV_M_H(emu_state_t *state) {
+    MEM_HL = state->h;
+    return 1;
+}
+
+int emu_MOV_M_L(emu_state_t *state) {
+    MEM_HL = state->l;
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_HLT)
-EMU_UNIMPLEMENTED(emu_MOV_M_A)
-EMU_UNIMPLEMENTED(emu_MOV_A_B)
-EMU_UNIMPLEMENTED(emu_MOV_A_C)
-EMU_UNIMPLEMENTED(emu_MOV_A_D)
-EMU_UNIMPLEMENTED(emu_MOV_A_E)
-EMU_UNIMPLEMENTED(emu_MOV_A_H)
-EMU_UNIMPLEMENTED(emu_MOV_A_L)
-EMU_UNIMPLEMENTED(emu_MOV_A_M)
-EMU_UNIMPLEMENTED(emu_MOV_A_A)
+
+int emu_MOV_M_A(emu_state_t *state) {
+    MEM_HL = state->a;
+    return 1;
+}
+
+int emu_MOV_A_B(emu_state_t *state) {
+    state->a = state->b;
+    return 1;
+}
+
+int emu_MOV_A_C(emu_state_t *state) {
+    state->a = state->c;
+    return 1;
+}
+
+int emu_MOV_A_D(emu_state_t *state) {
+    state->a = state->d;
+    return 1;
+}
+
+int emu_MOV_A_E(emu_state_t *state) {
+    state->a = state->e;
+    return 1;
+}
+
+int emu_MOV_A_H(emu_state_t *state) {
+    state->a = state->h;
+    return 1;
+}
+
+int emu_MOV_A_L(emu_state_t *state) {
+    state->a = state->l;
+    return 1;
+}
+
+int emu_MOV_A_M(emu_state_t *state) {
+    state->a = MEM_HL;
+    return 1;
+}
+
+int emu_MOV_A_A(emu_state_t *state) {
+    state->a = state->a;
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_ADD_B)
 EMU_UNIMPLEMENTED(emu_ADD_C)
 EMU_UNIMPLEMENTED(emu_ADD_D)
