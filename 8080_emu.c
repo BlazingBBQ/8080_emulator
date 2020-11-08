@@ -6,8 +6,24 @@
         exit(1);                   \
     }
 
+/* Define register pair high-order and low-order registers */
+#define RP_BC_RH (state->b)
+#define RP_BC_RL (state->c)
+#define RP_DE_RH (state->d)
+#define RP_DE_RL (state->e)
+#define RP_HL_RH (state->h)
+#define RP_HL_RL (state->l)
+#define RP_SP_RH (state->sp_h)
+#define RP_SP_RL (state->sp_l)
+
+#define SP ((state->sp_h << sizeof(uint8_t)) + state->sp_l)
+
 /* The content of the memory location, whose address is in registers H and L. */
-#define MEM_HL (*(state->mem + (state->h << sizeof(uint8_t)) + state->l))
+#define MEM_HL (*(state->mem + (RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL))
+
+#define LOW_ORDER_DATA (state->mem[state->pc + 1])
+#define HIGH_ORDER_DATA (state->mem[state->pc + 2])
+#define DATA (LOW_ORDER_DATA)
 
 typedef struct {
     uint8_t z : 1;    // Zero
@@ -26,8 +42,9 @@ typedef struct {
     uint8_t e;
     uint8_t h;
     uint8_t l;
-    uint16_t pc;  // Program counter
-    uint16_t sp;  // Stack pointer
+    uint16_t pc;   // Program counter
+    uint8_t sp_h;  // Stack pointer (high & low)
+    uint8_t sp_l;
     condition_flags_t cf;
     uint8_t *mem;
 } emu_state_t;
@@ -41,12 +58,22 @@ int emu_NOP(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_LXI_B)
+int emu_LXI_B(emu_state_t *state) {
+    RP_BC_RH = HIGH_ORDER_DATA;
+    RP_BC_RL = LOW_ORDER_DATA;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_STAX_B)
 EMU_UNIMPLEMENTED(emu_INX_B)
 EMU_UNIMPLEMENTED(emu_INR_B)
 EMU_UNIMPLEMENTED(emu_DCR_B)
-EMU_UNIMPLEMENTED(emu_MVI_B)
+
+int emu_MVI_B(emu_state_t *state) {
+    state->b = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RLC)
 // 0x08 --
 EMU_UNIMPLEMENTED(emu_DAD_B)
@@ -54,15 +81,31 @@ EMU_UNIMPLEMENTED(emu_LDAX_B)
 EMU_UNIMPLEMENTED(emu_DCX_B)
 EMU_UNIMPLEMENTED(emu_INR_C)
 EMU_UNIMPLEMENTED(emu_DCR_C)
-EMU_UNIMPLEMENTED(emu_MVI_C)
+
+int emu_MVI_C(emu_state_t *state) {
+    state->c = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RRC)
 // 0x10 --
-EMU_UNIMPLEMENTED(emu_LXI_D)
+
+int emu_LXI_D(emu_state_t *state) {
+    RP_DE_RH = HIGH_ORDER_DATA;
+    RP_DE_RL = LOW_ORDER_DATA;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_STAX_D)
 EMU_UNIMPLEMENTED(emu_INX_D)
 EMU_UNIMPLEMENTED(emu_INR_D)
 EMU_UNIMPLEMENTED(emu_DCR_D)
-EMU_UNIMPLEMENTED(emu_MVI_D)
+
+int emu_MVI_D(emu_state_t *state) {
+    state->d = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RAL)
 // 0x18 --
 EMU_UNIMPLEMENTED(emu_DAD_D)
@@ -70,15 +113,31 @@ EMU_UNIMPLEMENTED(emu_LDAX_D)
 EMU_UNIMPLEMENTED(emu_DCX_D)
 EMU_UNIMPLEMENTED(emu_INR_E)
 EMU_UNIMPLEMENTED(emu_DCR_E)
-EMU_UNIMPLEMENTED(emu_MVI_E)
+
+int emu_MVI_E(emu_state_t *state) {
+    state->e = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RAR)
 EMU_UNIMPLEMENTED(emu_RIM)
-EMU_UNIMPLEMENTED(emu_LXI_H)
+
+int emu_LXI_H(emu_state_t *state) {
+    RP_HL_RH = HIGH_ORDER_DATA;
+    RP_HL_RL = LOW_ORDER_DATA;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_SHLD)
 EMU_UNIMPLEMENTED(emu_INX_H)
 EMU_UNIMPLEMENTED(emu_INR_H)
 EMU_UNIMPLEMENTED(emu_DCR_H)
-EMU_UNIMPLEMENTED(emu_MVI_H)
+
+int emu_MVI_H(emu_state_t *state) {
+    state->h = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_DAA)
 // 0x28 --
 EMU_UNIMPLEMENTED(emu_DAD_H)
@@ -86,15 +145,31 @@ EMU_UNIMPLEMENTED(emu_LHLD)
 EMU_UNIMPLEMENTED(emu_DCX_H)
 EMU_UNIMPLEMENTED(emu_INR_L)
 EMU_UNIMPLEMENTED(emu_DCR_L)
-EMU_UNIMPLEMENTED(emu_MVI_L)
+
+int emu_MVI_L(emu_state_t *state) {
+    state->l = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_CMA)
 EMU_UNIMPLEMENTED(emu_SIM)
-EMU_UNIMPLEMENTED(emu_LXI_SP)
+
+int emu_LXI_SP(emu_state_t *state) {
+    RP_SP_RH = HIGH_ORDER_DATA;
+    RP_SP_RL = LOW_ORDER_DATA;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_STA)
 EMU_UNIMPLEMENTED(emu_INX_SP)
 EMU_UNIMPLEMENTED(emu_INR_M)
 EMU_UNIMPLEMENTED(emu_DCR_M)
-EMU_UNIMPLEMENTED(emu_MVI_M)
+
+int emu_MVI_M(emu_state_t *state) {
+    MEM_HL = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_STC)
 // 0x38 --
 EMU_UNIMPLEMENTED(emu_DAD_SP)
@@ -102,7 +177,12 @@ EMU_UNIMPLEMENTED(emu_LDA)
 EMU_UNIMPLEMENTED(emu_DCX_SP)
 EMU_UNIMPLEMENTED(emu_INR_A)
 EMU_UNIMPLEMENTED(emu_DCR_A)
-EMU_UNIMPLEMENTED(emu_MVI_A)
+
+int emu_MVI_A(emu_state_t *state) {
+    state->a = DATA;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_CMC)
 
 int emu_MOV_B_B(emu_state_t *state) {
