@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "8080_disasm.c"
+#include "8080_emu.c"
 
 int main(int argc, char **argv) {
     FILE *fp = fopen(argv[1], "rb");
