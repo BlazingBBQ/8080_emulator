@@ -1,9 +1,9 @@
 #include <stdint.h>
 
-#define EMU_UNIMPLEMENTED(name)   \
-    int name(emu_state_t state) { \
-        (void)(state);            \
-        return 1;                 \
+#define EMU_UNIMPLEMENTED(name)    \
+    int name(emu_state_t *state) { \
+        (void)(state);             \
+        exit(1);                   \
     }
 
 typedef struct {
@@ -294,7 +294,7 @@ EMU_UNIMPLEMENTED(emu_RST_7)
  * Returns:
  *      Number of bytes to advance pc.
  */
-int (*emu_handlers[0x100])(emu_state_t state) = {
+int (*emu_handlers[0x100])(emu_state_t *state) = {
     emu_NOP,            // 0x00
     emu_LXI_B,          // 0x01
     emu_STAX_B,         // 0x02
