@@ -18,12 +18,19 @@
 
 #define SP ((state->sp_h << sizeof(uint8_t)) + state->sp_l)
 
-/* The content of the memory location, whose address is in registers H and L. */
-#define MEM_HL (*(state->mem + (RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL))
-
 #define LOW_ORDER_DATA (state->mem[state->pc + 1])
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
 #define DATA (LOW_ORDER_DATA)
+
+/* The content of the memory location, whose address is in registers H and L. */
+#define MEM_HL (*(state->mem + (RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL))
+/* The content of the memory location, whose address is specified in byte 2 and
+ * byte 3 of the instruction. */
+#define MEM_ADDR \
+    (*(state->mem + (HIGH_ORDER_DATA << sizeof(uint8_t)) + LOW_ORDER_DATA))
+/* The content of the memory location at the succeeding address. */
+#define MEM_ADDR_1 \
+    (*(state->mem + (HIGH_ORDER_DATA << sizeof(uint8_t)) + LOW_ORDER_DATA + 1))
 
 typedef struct {
     uint8_t z : 1;    // Zero
@@ -128,7 +135,12 @@ int emu_LXI_H(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_SHLD)
+int emu_SHLD(emu_state_t *state) {
+    MEM_ADDR = state->l;
+    MEM_ADDR_1 = state->h;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_INX_H)
 EMU_UNIMPLEMENTED(emu_INR_H)
 EMU_UNIMPLEMENTED(emu_DCR_H)
@@ -141,7 +153,13 @@ int emu_MVI_H(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_DAA)
 // 0x28 --
 EMU_UNIMPLEMENTED(emu_DAD_H)
-EMU_UNIMPLEMENTED(emu_LHLD)
+
+int emu_LHLD(emu_state_t *state) {
+    state->l = MEM_ADDR;
+    state->h = MEM_ADDR_1;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_DCX_H)
 EMU_UNIMPLEMENTED(emu_INR_L)
 EMU_UNIMPLEMENTED(emu_DCR_L)
@@ -160,7 +178,11 @@ int emu_LXI_SP(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_STA)
+int emu_STA(emu_state_t *state) {
+    MEM_ADDR = state->a;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_INX_SP)
 EMU_UNIMPLEMENTED(emu_INR_M)
 EMU_UNIMPLEMENTED(emu_DCR_M)
@@ -173,7 +195,12 @@ int emu_MVI_M(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_STC)
 // 0x38 --
 EMU_UNIMPLEMENTED(emu_DAD_SP)
-EMU_UNIMPLEMENTED(emu_LDA)
+
+int emu_LDA(emu_state_t *state) {
+    state->a = MEM_ADDR;
+    return 3;
+}
+
 EMU_UNIMPLEMENTED(emu_DCX_SP)
 EMU_UNIMPLEMENTED(emu_INR_A)
 EMU_UNIMPLEMENTED(emu_DCR_A)
