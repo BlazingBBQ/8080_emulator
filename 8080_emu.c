@@ -22,6 +22,10 @@
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
 #define DATA (LOW_ORDER_DATA)
 
+/* The content of the memory location, whose address is in registers B and C. */
+#define MEM_BC (*(state->mem + (RP_BC_RH << sizeof(uint8_t)) + RP_BC_RL))
+/* The content of the memory location, whose address is in registers D and E. */
+#define MEM_DE (*(state->mem + (RP_DE_RH << sizeof(uint8_t)) + RP_DE_RL))
 /* The content of the memory location, whose address is in registers H and L. */
 #define MEM_HL (*(state->mem + (RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL))
 /* The content of the memory location, whose address is specified in byte 2 and
@@ -71,7 +75,11 @@ int emu_LXI_B(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_STAX_B)
+int emu_STAX_B(emu_state_t *state) {
+    MEM_BC = state->a;
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_INX_B)
 EMU_UNIMPLEMENTED(emu_INR_B)
 EMU_UNIMPLEMENTED(emu_DCR_B)
@@ -84,7 +92,12 @@ int emu_MVI_B(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RLC)
 // 0x08 --
 EMU_UNIMPLEMENTED(emu_DAD_B)
-EMU_UNIMPLEMENTED(emu_LDAX_B)
+
+int emu_LDAX_B(emu_state_t *state) {
+    state->a = MEM_BC;
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_DCX_B)
 EMU_UNIMPLEMENTED(emu_INR_C)
 EMU_UNIMPLEMENTED(emu_DCR_C)
@@ -103,7 +116,11 @@ int emu_LXI_D(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_STAX_D)
+int emu_STAX_D(emu_state_t *state) {
+    MEM_DE = state->a;
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_INX_D)
 EMU_UNIMPLEMENTED(emu_INR_D)
 EMU_UNIMPLEMENTED(emu_DCR_D)
@@ -116,7 +133,12 @@ int emu_MVI_D(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RAL)
 // 0x18 --
 EMU_UNIMPLEMENTED(emu_DAD_D)
-EMU_UNIMPLEMENTED(emu_LDAX_D)
+
+int emu_LDAX_D(emu_state_t *state) {
+    state->a = MEM_DE;
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_DCX_D)
 EMU_UNIMPLEMENTED(emu_INR_E)
 EMU_UNIMPLEMENTED(emu_DCR_E)
@@ -636,7 +658,18 @@ EMU_UNIMPLEMENTED(emu_RST_4)
 EMU_UNIMPLEMENTED(emu_RPE)
 EMU_UNIMPLEMENTED(emu_PCHL)
 EMU_UNIMPLEMENTED(emu_JPE)
-EMU_UNIMPLEMENTED(emu_XCHG)
+
+int emu_XCHG(emu_state_t *state) {
+    uint8_t tmp_h = state->h;
+    uint8_t tmp_l = state->l;
+
+    state->h = state->d;
+    state->l = state->e;
+    state->d = tmp_h;
+    state->e = tmp_l;
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_CPE)
 // 0xed --
 EMU_UNIMPLEMENTED(emu_XRI)
