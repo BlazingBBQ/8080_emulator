@@ -28,6 +28,9 @@
 #define MEM_DE (*(state->mem + (RP_DE_RH << sizeof(uint8_t)) + RP_DE_RL))
 /* The content of the memory location, whose address is in registers H and L. */
 #define MEM_HL (*(state->mem + (RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL))
+/* The content of the memory location, whose address is in SP registers. */
+#define MEM_SP (*SP)
+
 /* The content of the memory location, whose address is specified in byte 2 and
  * byte 3 of the instruction. */
 #define MEM_ADDR \
@@ -102,7 +105,8 @@ int carry(uint8_t op1, uint8_t op2, uint32_t bit_no, uint8_t cy) {
 }
 
 /*
- * emu_update_flags: Updates the flags based on the result of the operation
+ * emu_update_zsp: Updates the Zero, Sign and Parity flags based on the result
+ *                 of the operation
  *
  * Arguments:
  *   state  - emulator state to update
@@ -111,14 +115,10 @@ int carry(uint8_t op1, uint8_t op2, uint32_t bit_no, uint8_t cy) {
  * Returns:
  *   None.
  */
-void emu_update_flags(emu_state_t *state, uint8_t result) {
+void emu_update_zsp(emu_state_t *state, uint8_t result) {
     state->cf.z = (result == 0);
     state->cf.s = (result >> 7 == 1);
     state->cf.p = parity(result);
-    /* Carry flags are reset and must explicitely be set by affecting
-     * instructions */
-    state->cf.cy = 0;
-    state->cf.ac = 0;
 }
 
 /*
@@ -135,7 +135,7 @@ void emu_update_flags(emu_state_t *state, uint8_t result) {
  */
 void emu_add(emu_state_t *state, uint8_t *reg, uint8_t val, uint8_t cy) {
     uint8_t result = *reg + val + cy;
-    emu_update_flags(state, result);
+    emu_update_zsp(state, result);
     state->cf.cy = carry(*reg, val, 8, cy);
     state->cf.ac = carry(*reg, val, 4, cy);
     *reg = result;
@@ -160,6 +160,40 @@ void emu_sub(emu_state_t *state, uint8_t *reg, uint8_t val, uint8_t cy) {
     state->cf.cy = !state->cf.cy;
 }
 
+/*
+ * emu_inr: Increment value of register
+ *          Does not affect cy flag
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   reg    - pointer to register to increment
+ *
+ * Returns:
+ *   None.
+ */
+void emu_inr(emu_state_t *state, uint8_t *reg) {
+    *reg += 1;
+    emu_update_zsp(state, *reg);
+    state->cf.ac = (*reg == 0x0);
+}
+
+/*
+ * emu_dcr: Decrement value of register
+ *          Does not affect cy flag
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   reg    - pointer to register to decrement
+ *
+ * Returns:
+ *   None.
+ */
+void emu_dcr(emu_state_t *state, uint8_t *reg) {
+    *reg -= 1;
+    emu_update_zsp(state, *reg);
+    state->cf.ac = (*reg == 0xF);
+}
+
 EMU_UNIMPLEMENTED(emu_unimplemented)
 
 /* --- 8080 Instructions --- */
@@ -180,9 +214,20 @@ int emu_STAX_B(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_INX_B)
-EMU_UNIMPLEMENTED(emu_INR_B)
-EMU_UNIMPLEMENTED(emu_DCR_B)
+int emu_INX_B(emu_state_t *state) {
+    MEM_BC += 1;
+    return 1;
+}
+
+int emu_INR_B(emu_state_t *state) {
+    emu_inr(state, &state->b);
+    return 1;
+}
+
+int emu_DCR_B(emu_state_t *state) {
+    emu_dcr(state, &state->b);
+    return 1;
+}
 
 int emu_MVI_B(emu_state_t *state) {
     state->b = DATA;
@@ -198,9 +243,20 @@ int emu_LDAX_B(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_DCX_B)
-EMU_UNIMPLEMENTED(emu_INR_C)
-EMU_UNIMPLEMENTED(emu_DCR_C)
+int emu_DCX_B(emu_state_t *state) {
+    MEM_BC -= 1;
+    return 1;
+}
+
+int emu_INR_C(emu_state_t *state) {
+    emu_inr(state, &state->c);
+    return 1;
+}
+
+int emu_DCR_C(emu_state_t *state) {
+    emu_dcr(state, &state->c);
+    return 1;
+}
 
 int emu_MVI_C(emu_state_t *state) {
     state->c = DATA;
@@ -221,9 +277,20 @@ int emu_STAX_D(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_INX_D)
-EMU_UNIMPLEMENTED(emu_INR_D)
-EMU_UNIMPLEMENTED(emu_DCR_D)
+int emu_INX_D(emu_state_t *state) {
+    MEM_DE += 1;
+    return 1;
+}
+
+int emu_INR_D(emu_state_t *state) {
+    emu_inr(state, &state->d);
+    return 1;
+}
+
+int emu_DCR_D(emu_state_t *state) {
+    emu_dcr(state, &state->d);
+    return 1;
+}
 
 int emu_MVI_D(emu_state_t *state) {
     state->d = DATA;
@@ -239,9 +306,20 @@ int emu_LDAX_D(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_DCX_D)
-EMU_UNIMPLEMENTED(emu_INR_E)
-EMU_UNIMPLEMENTED(emu_DCR_E)
+int emu_DCX_D(emu_state_t *state) {
+    MEM_DE -= 1;
+    return 1;
+}
+
+int emu_INR_E(emu_state_t *state) {
+    emu_inr(state, &state->e);
+    return 1;
+}
+
+int emu_DCR_E(emu_state_t *state) {
+    emu_dcr(state, &state->e);
+    return 1;
+}
 
 int emu_MVI_E(emu_state_t *state) {
     state->e = DATA;
@@ -263,9 +341,20 @@ int emu_SHLD(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_INX_H)
-EMU_UNIMPLEMENTED(emu_INR_H)
-EMU_UNIMPLEMENTED(emu_DCR_H)
+int emu_INX_H(emu_state_t *state) {
+    MEM_HL += 1;
+    return 1;
+}
+
+int emu_INR_H(emu_state_t *state) {
+    emu_inr(state, &state->h);
+    return 1;
+}
+
+int emu_DCR_H(emu_state_t *state) {
+    emu_dcr(state, &state->h);
+    return 1;
+}
 
 int emu_MVI_H(emu_state_t *state) {
     state->h = DATA;
@@ -282,9 +371,20 @@ int emu_LHLD(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_DCX_H)
-EMU_UNIMPLEMENTED(emu_INR_L)
-EMU_UNIMPLEMENTED(emu_DCR_L)
+int emu_DCX_H(emu_state_t *state) {
+    MEM_HL -= 1;
+    return 1;
+}
+
+int emu_INR_L(emu_state_t *state) {
+    emu_inr(state, &state->l);
+    return 1;
+}
+
+int emu_DCR_L(emu_state_t *state) {
+    emu_dcr(state, &state->l);
+    return 1;
+}
 
 int emu_MVI_L(emu_state_t *state) {
     state->l = DATA;
@@ -305,9 +405,20 @@ int emu_STA(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_INX_SP)
-EMU_UNIMPLEMENTED(emu_INR_M)
-EMU_UNIMPLEMENTED(emu_DCR_M)
+int emu_INX_SP(emu_state_t *state) {
+    MEM_SP += 1;
+    return 1;
+}
+
+int emu_INR_M(emu_state_t *state) {
+    emu_inr(state, MEM_HL);
+    return 1;
+}
+
+int emu_DCR_M(emu_state_t *state) {
+    emu_dcr(state, MEM_HL);
+    return 1;
+}
 
 int emu_MVI_M(emu_state_t *state) {
     MEM_HL = DATA;
@@ -323,9 +434,20 @@ int emu_LDA(emu_state_t *state) {
     return 3;
 }
 
-EMU_UNIMPLEMENTED(emu_DCX_SP)
-EMU_UNIMPLEMENTED(emu_INR_A)
-EMU_UNIMPLEMENTED(emu_DCR_A)
+int emu_DCX_SP(emu_state_t *state) {
+    MEM_SP -= 1;
+    return 1;
+}
+
+int emu_INR_A(emu_state_t *state) {
+    emu_inr(state, &state->a);
+    return 1;
+}
+
+int emu_DCR_A(emu_state_t *state) {
+    emu_dcr(state, &state->a);
+    return 1;
+}
 
 int emu_MVI_A(emu_state_t *state) {
     state->a = DATA;
