@@ -16,7 +16,7 @@
 #define RP_SP_RH (state->sp_h)
 #define RP_SP_RL (state->sp_l)
 
-#define SP ((state->sp_h << sizeof(uint8_t)) + state->sp_l)
+#define SP ((RP_SP_RH << sizeof(uint8_t)) + RP_SP_RL)
 
 #define LOW_ORDER_DATA (state->mem[state->pc + 1])
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
@@ -139,6 +139,25 @@ void emu_add(emu_state_t *state, uint8_t *reg, uint8_t val, uint8_t cy) {
     state->cf.cy = carry(*reg, val, 8, cy);
     state->cf.ac = carry(*reg, val, 4, cy);
     *reg = result;
+}
+
+/*
+ * emu_sub: Sub given value from the target register and update flags
+ *          accordingly
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   reg    - pointer to register on which to perform subtraction
+ *   val    - value to sub from register
+ *   cy     - carry-in
+ *
+ * Returns:
+ *   None.
+ */
+void emu_sub(emu_state_t *state, uint8_t *reg, uint8_t val, uint8_t cy) {
+    /* See https://en.wikipedia.org/wiki/Carry_flag#Vs._borrow_flag */
+    emu_add(state, reg, ~val, !cy);
+    state->cf.cy = !state->cf.cy;
 }
 
 EMU_UNIMPLEMENTED(emu_unimplemented)
@@ -712,22 +731,86 @@ int emu_ADC_A(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_SUB_B)
-EMU_UNIMPLEMENTED(emu_SUB_C)
-EMU_UNIMPLEMENTED(emu_SUB_D)
-EMU_UNIMPLEMENTED(emu_SUB_E)
-EMU_UNIMPLEMENTED(emu_SUB_H)
-EMU_UNIMPLEMENTED(emu_SUB_L)
-EMU_UNIMPLEMENTED(emu_SUB_M)
-EMU_UNIMPLEMENTED(emu_SUB_A)
-EMU_UNIMPLEMENTED(emu_SBB_B)
-EMU_UNIMPLEMENTED(emu_SBB_C)
-EMU_UNIMPLEMENTED(emu_SBB_D)
-EMU_UNIMPLEMENTED(emu_SBB_E)
-EMU_UNIMPLEMENTED(emu_SBB_H)
-EMU_UNIMPLEMENTED(emu_SBB_L)
-EMU_UNIMPLEMENTED(emu_SBB_M)
-EMU_UNIMPLEMENTED(emu_SBB_A)
+int emu_SUB_B(emu_state_t *state) {
+    emu_sub(state, &state->a, state->b, 0);
+    return 1;
+}
+
+int emu_SUB_C(emu_state_t *state) {
+    emu_sub(state, &state->a, state->c, 0);
+    return 1;
+}
+
+int emu_SUB_D(emu_state_t *state) {
+    emu_sub(state, &state->a, state->d, 0);
+    return 1;
+}
+
+int emu_SUB_E(emu_state_t *state) {
+    emu_sub(state, &state->a, state->e, 0);
+    return 1;
+}
+
+int emu_SUB_H(emu_state_t *state) {
+    emu_sub(state, &state->a, state->h, 0);
+    return 1;
+}
+
+int emu_SUB_L(emu_state_t *state) {
+    emu_sub(state, &state->a, state->l, 0);
+    return 1;
+}
+
+int emu_SUB_M(emu_state_t *state) {
+    emu_sub(state, &state->a, MEM_HL, 0);
+    return 1;
+}
+
+int emu_SUB_A(emu_state_t *state) {
+    emu_sub(state, &state->a, state->a, 0);
+    return 1;
+}
+
+int emu_SBB_B(emu_state_t *state) {
+    emu_sub(state, &state->a, state->b, state->cf.cy);
+    return 1;
+}
+
+int emu_SBB_C(emu_state_t *state) {
+    emu_sub(state, &state->a, state->c, state->cf.cy);
+    return 1;
+}
+
+int emu_SBB_D(emu_state_t *state) {
+    emu_sub(state, &state->a, state->d, state->cf.cy);
+    return 1;
+}
+
+int emu_SBB_E(emu_state_t *state) {
+    emu_sub(state, &state->a, state->e, state->cf.cy);
+    return 1;
+}
+
+int emu_SBB_H(emu_state_t *state) {
+    emu_sub(state, &state->a, state->h, state->cf.cy);
+    return 1;
+}
+
+int emu_SBB_L(emu_state_t *state) {
+    emu_sub(state, &state->a, state->l, state->cf.cy);
+    return 1;
+}
+
+int emu_SBB_M(emu_state_t *state) {
+    emu_sub(state, &state->a, MEM_HL, state->cf.cy);
+    return 1;
+}
+
+int emu_SBB_A(emu_state_t *state) {
+    emu_sub(state, &state->a, state->a, state->cf.cy);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_ANA_B)
 EMU_UNIMPLEMENTED(emu_ANA_C)
 EMU_UNIMPLEMENTED(emu_ANA_D)
@@ -792,7 +875,12 @@ EMU_UNIMPLEMENTED(emu_JNC)
 EMU_UNIMPLEMENTED(emu_OUT)
 EMU_UNIMPLEMENTED(emu_CNC)
 EMU_UNIMPLEMENTED(emu_PUSH_D)
-EMU_UNIMPLEMENTED(emu_SUI)
+
+int emu_SUI(emu_state_t *state) {
+    emu_sub(state, &state->a, DATA, 0);
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_2)
 EMU_UNIMPLEMENTED(emu_RC)
 // 0xd9 --
@@ -800,7 +888,12 @@ EMU_UNIMPLEMENTED(emu_JC)
 EMU_UNIMPLEMENTED(emu_IN)
 EMU_UNIMPLEMENTED(emu_CC)
 // 0xdd --
-EMU_UNIMPLEMENTED(emu_SBI)
+
+int emu_SBI(emu_state_t *state) {
+    emu_sub(state, &state->a, DATA, state->cf.cy);
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_3)
 EMU_UNIMPLEMENTED(emu_RPO)
 EMU_UNIMPLEMENTED(emu_POP_H)
