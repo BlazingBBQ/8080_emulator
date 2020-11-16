@@ -672,14 +672,46 @@ int emu_ADD_A(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_ADC_B)
-EMU_UNIMPLEMENTED(emu_ADC_C)
-EMU_UNIMPLEMENTED(emu_ADC_D)
-EMU_UNIMPLEMENTED(emu_ADC_E)
-EMU_UNIMPLEMENTED(emu_ADC_H)
-EMU_UNIMPLEMENTED(emu_ADC_L)
-EMU_UNIMPLEMENTED(emu_ADC_M)
-EMU_UNIMPLEMENTED(emu_ADC_A)
+int emu_ADC_B(emu_state_t *state) {
+    emu_add(state, &state->a, state->b, state->cf.cy);
+    return 1;
+}
+
+int emu_ADC_C(emu_state_t *state) {
+    emu_add(state, &state->a, state->c, state->cf.cy);
+    return 1;
+}
+
+int emu_ADC_D(emu_state_t *state) {
+    emu_add(state, &state->a, state->d, state->cf.cy);
+    return 1;
+}
+
+int emu_ADC_E(emu_state_t *state) {
+    emu_add(state, &state->a, state->e, state->cf.cy);
+    return 1;
+}
+
+int emu_ADC_H(emu_state_t *state) {
+    emu_add(state, &state->a, state->h, state->cf.cy);
+    return 1;
+}
+
+int emu_ADC_L(emu_state_t *state) {
+    emu_add(state, &state->a, state->l, state->cf.cy);
+    return 1;
+}
+
+int emu_ADC_M(emu_state_t *state) {
+    emu_add(state, &state->a, MEM_HL, state->cf.cy);
+    return 1;
+}
+
+int emu_ADC_A(emu_state_t *state) {
+    emu_add(state, &state->a, state->a, state->cf.cy);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_SUB_B)
 EMU_UNIMPLEMENTED(emu_SUB_C)
 EMU_UNIMPLEMENTED(emu_SUB_D)
@@ -747,7 +779,12 @@ EMU_UNIMPLEMENTED(emu_JZ)
 // 0xcb --
 EMU_UNIMPLEMENTED(emu_CZ)
 EMU_UNIMPLEMENTED(emu_CALL)
-EMU_UNIMPLEMENTED(emu_ACI)
+
+int emu_ACI(emu_state_t *state) {
+    emu_add(state, &state->a, DATA, state->cf.cy);
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_1)
 EMU_UNIMPLEMENTED(emu_RNC)
 EMU_UNIMPLEMENTED(emu_POP_D)
