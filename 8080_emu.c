@@ -16,6 +16,9 @@
 #define RP_SP_RH (state->sp_h)
 #define RP_SP_RL (state->sp_l)
 
+#define BC ((RP_BC_RH << sizeof(uint8_t)) + RP_BC_RL)
+#define DE ((RP_DE_RH << sizeof(uint8_t)) + RP_DE_RL)
+#define HL ((RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL)
 #define SP ((RP_SP_RH << sizeof(uint8_t)) + RP_SP_RL)
 
 #define LOW_ORDER_DATA (state->mem[state->pc + 1])
@@ -23,11 +26,11 @@
 #define DATA (LOW_ORDER_DATA)
 
 /* The content of the memory location, whose address is in registers B and C. */
-#define MEM_BC (*(state->mem + (RP_BC_RH << sizeof(uint8_t)) + RP_BC_RL))
+#define MEM_BC (*(state->mem + BC))
 /* The content of the memory location, whose address is in registers D and E. */
-#define MEM_DE (*(state->mem + (RP_DE_RH << sizeof(uint8_t)) + RP_DE_RL))
+#define MEM_DE (*(state->mem + DE))
 /* The content of the memory location, whose address is in registers H and L. */
-#define MEM_HL (*(state->mem + (RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL))
+#define MEM_HL (*(state->mem + HL))
 /* The content of the memory location, whose address is in SP registers. */
 #define MEM_SP (*(state->mem + SP))
 
@@ -194,6 +197,13 @@ void emu_dcr(emu_state_t *state, uint8_t *reg) {
     state->cf.ac = (*reg == 0xF);
 }
 
+void emu_dad(emu_state_t *state, uint8_t rp_rh, uint8_t rp_rl) {
+    int rl_cy = carry(RP_HL_RL, rp_rl, 8, 0);
+    RP_HL_RL += rp_rl;
+    state->cf.cy = carry(RP_HL_RH, rp_rh, 8, rl_cy);
+    RP_HL_RH += rp_rh + rl_cy;
+}
+
 EMU_UNIMPLEMENTED(emu_unimplemented)
 
 /* --- 8080 Instructions --- */
@@ -236,7 +246,11 @@ int emu_MVI_B(emu_state_t *state) {
 
 EMU_UNIMPLEMENTED(emu_RLC)
 // 0x08 --
-EMU_UNIMPLEMENTED(emu_DAD_B)
+
+int emu_DAD_B(emu_state_t *state) {
+    emu_dad(state, RP_BC_RH, RP_BC_RL);
+    return 1;
+}
 
 int emu_LDAX_B(emu_state_t *state) {
     state->a = MEM_BC;
@@ -299,7 +313,11 @@ int emu_MVI_D(emu_state_t *state) {
 
 EMU_UNIMPLEMENTED(emu_RAL)
 // 0x18 --
-EMU_UNIMPLEMENTED(emu_DAD_D)
+
+int emu_DAD_D(emu_state_t *state) {
+    emu_dad(state, RP_DE_RH, RP_DE_RL);
+    return 1;
+}
 
 int emu_LDAX_D(emu_state_t *state) {
     state->a = MEM_DE;
@@ -361,9 +379,29 @@ int emu_MVI_H(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_DAA)
+int emu_DAA(emu_state_t *state) {
+    /* If the value of the least significant 4 bits of the accumulator is
+     * greater than 9 or if the AC flag is set, 6 is added to the accumulator */
+    if ((state->a & 0xF) > 9 || state->cf.ac) {
+        emu_add(state, &state->a, 6, 0);
+    }
+
+    /* If the value of the most significant 4 bits of the accumulator is now
+     * greater than 9, or if the CY flag is set, 6 is added to the most
+     * significant 4 bits of the accumulator. */
+    if ((state->a >> 4) > 9 || state->cf.cy) {
+        emu_add(state, &state->a, 6 << 4, state->cf.cy);
+    }
+
+    return 1;
+}
+
 // 0x28 --
-EMU_UNIMPLEMENTED(emu_DAD_H)
+
+int emu_DAD_H(emu_state_t *state) {
+    emu_dad(state, RP_HL_RH, RP_HL_RL);
+    return 1;
+}
 
 int emu_LHLD(emu_state_t *state) {
     state->l = MEM_ADDR;
@@ -411,12 +449,12 @@ int emu_INX_SP(emu_state_t *state) {
 }
 
 int emu_INR_M(emu_state_t *state) {
-    emu_inr(state, MEM_HL);
+    emu_inr(state, &MEM_HL);
     return 1;
 }
 
 int emu_DCR_M(emu_state_t *state) {
-    emu_dcr(state, MEM_HL);
+    emu_dcr(state, &MEM_HL);
     return 1;
 }
 
@@ -427,7 +465,11 @@ int emu_MVI_M(emu_state_t *state) {
 
 EMU_UNIMPLEMENTED(emu_STC)
 // 0x38 --
-EMU_UNIMPLEMENTED(emu_DAD_SP)
+
+int emu_DAD_SP(emu_state_t *state) {
+    emu_dad(state, RP_SP_RH, RP_SP_RL);
+    return 1;
+}
 
 int emu_LDA(emu_state_t *state) {
     state->a = MEM_ADDR;
