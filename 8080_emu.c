@@ -29,7 +29,7 @@
 /* The content of the memory location, whose address is in registers H and L. */
 #define MEM_HL (*(state->mem + (RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL))
 /* The content of the memory location, whose address is in SP registers. */
-#define MEM_SP (*SP)
+#define MEM_SP (*(state->mem + SP))
 
 /* The content of the memory location, whose address is specified in byte 2 and
  * byte 3 of the instruction. */
