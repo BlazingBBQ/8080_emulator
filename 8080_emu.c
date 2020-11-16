@@ -197,11 +197,76 @@ void emu_dcr(emu_state_t *state, uint8_t *reg) {
     state->cf.ac = (*reg == 0xF);
 }
 
+/*
+ * emu_dad: Contents of register pair to register pair HL
+ *          Only cy flag is affected
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   rp_rh  - high order register of register pair
+ *   rp_rl  - low order register of register pair
+ *
+ * Returns:
+ *   None.
+ */
 void emu_dad(emu_state_t *state, uint8_t rp_rh, uint8_t rp_rl) {
     int rl_cy = carry(RP_HL_RL, rp_rl, 8, 0);
     RP_HL_RL += rp_rl;
     state->cf.cy = carry(RP_HL_RH, rp_rh, 8, rl_cy);
     RP_HL_RH += rp_rh + rl_cy;
+}
+
+/*
+ * emu_and: The contents of the accumulator is anded with the given value
+ *          The cy flag is cleared
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   val    - value to and with the accumulator
+ *
+ * Returns:
+ *   None.
+ */
+void emu_and(emu_state_t *state, uint8_t val) {
+    state->a &= val;
+    emu_update_zsp(state, state->a);
+    state->cf.cy = 0;
+}
+
+/*
+ * emu_xor: The contents of the accumulator is xored with the given value
+ *          The cy and ac flags are cleared
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   val    - value to xor with the accumulator
+ *
+ * Returns:
+ *   None.
+ */
+void emu_xor(emu_state_t *state, uint8_t val) {
+    state->a ^= val;
+    emu_update_zsp(state, state->a);
+    state->cf.cy = 0;
+    state->cf.ac = 0;
+}
+
+/*
+ * emu_or: The contents of the accumulator is ored with the given value
+ *         The cy and ac flags are cleared
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   val    - value to or with the accumulator
+ *
+ * Returns:
+ *   None.
+ */
+void emu_or(emu_state_t *state, uint8_t val) {
+    state->a |= val;
+    emu_update_zsp(state, state->a);
+    state->cf.cy = 0;
+    state->cf.ac = 0;
 }
 
 EMU_UNIMPLEMENTED(emu_unimplemented)
@@ -975,30 +1040,126 @@ int emu_SBB_A(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_ANA_B)
-EMU_UNIMPLEMENTED(emu_ANA_C)
-EMU_UNIMPLEMENTED(emu_ANA_D)
-EMU_UNIMPLEMENTED(emu_ANA_E)
-EMU_UNIMPLEMENTED(emu_ANA_H)
-EMU_UNIMPLEMENTED(emu_ANA_L)
-EMU_UNIMPLEMENTED(emu_ANA_M)
-EMU_UNIMPLEMENTED(emu_ANA_A)
-EMU_UNIMPLEMENTED(emu_XRA_B)
-EMU_UNIMPLEMENTED(emu_XRA_C)
-EMU_UNIMPLEMENTED(emu_XRA_D)
-EMU_UNIMPLEMENTED(emu_XRA_E)
-EMU_UNIMPLEMENTED(emu_XRA_H)
-EMU_UNIMPLEMENTED(emu_XRA_L)
-EMU_UNIMPLEMENTED(emu_XRA_M)
-EMU_UNIMPLEMENTED(emu_XRA_A)
-EMU_UNIMPLEMENTED(emu_ORA_B)
-EMU_UNIMPLEMENTED(emu_ORA_C)
-EMU_UNIMPLEMENTED(emu_ORA_D)
-EMU_UNIMPLEMENTED(emu_ORA_E)
-EMU_UNIMPLEMENTED(emu_ORA_H)
-EMU_UNIMPLEMENTED(emu_ORA_L)
-EMU_UNIMPLEMENTED(emu_ORA_M)
-EMU_UNIMPLEMENTED(emu_ORA_A)
+int emu_ANA_B(emu_state_t *state) {
+    emu_and(state, state->b);
+    return 1;
+}
+
+int emu_ANA_C(emu_state_t *state) {
+    emu_and(state, state->c);
+    return 1;
+}
+
+int emu_ANA_D(emu_state_t *state) {
+    emu_and(state, state->d);
+    return 1;
+}
+
+int emu_ANA_E(emu_state_t *state) {
+    emu_and(state, state->e);
+    return 1;
+}
+
+int emu_ANA_H(emu_state_t *state) {
+    emu_and(state, state->h);
+    return 1;
+}
+
+int emu_ANA_L(emu_state_t *state) {
+    emu_and(state, state->l);
+    return 1;
+}
+
+int emu_ANA_M(emu_state_t *state) {
+    emu_and(state, MEM_HL);
+    return 1;
+}
+
+int emu_ANA_A(emu_state_t *state) {
+    emu_and(state, state->a);
+    return 1;
+}
+
+int emu_XRA_B(emu_state_t *state) {
+    emu_xor(state, state->b);
+    return 1;
+}
+
+int emu_XRA_C(emu_state_t *state) {
+    emu_xor(state, state->c);
+    return 1;
+}
+
+int emu_XRA_D(emu_state_t *state) {
+    emu_xor(state, state->d);
+    return 1;
+}
+
+int emu_XRA_E(emu_state_t *state) {
+    emu_xor(state, state->e);
+    return 1;
+}
+
+int emu_XRA_H(emu_state_t *state) {
+    emu_xor(state, state->h);
+    return 1;
+}
+
+int emu_XRA_L(emu_state_t *state) {
+    emu_xor(state, state->l);
+    return 1;
+}
+
+int emu_XRA_M(emu_state_t *state) {
+    emu_xor(state, MEM_HL);
+    return 1;
+}
+
+int emu_XRA_A(emu_state_t *state) {
+    emu_xor(state, state->a);
+    return 1;
+}
+
+int emu_ORA_B(emu_state_t *state) {
+    emu_or(state, state->b);
+    return 1;
+}
+
+int emu_ORA_C(emu_state_t *state) {
+    emu_or(state, state->c);
+    return 1;
+}
+
+int emu_ORA_D(emu_state_t *state) {
+    emu_or(state, state->d);
+    return 1;
+}
+
+int emu_ORA_E(emu_state_t *state) {
+    emu_or(state, state->e);
+    return 1;
+}
+
+int emu_ORA_H(emu_state_t *state) {
+    emu_or(state, state->h);
+    return 1;
+}
+
+int emu_ORA_L(emu_state_t *state) {
+    emu_or(state, state->l);
+    return 1;
+}
+
+int emu_ORA_M(emu_state_t *state) {
+    emu_or(state, MEM_HL);
+    return 1;
+}
+
+int emu_ORA_A(emu_state_t *state) {
+    emu_or(state, state->a);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_CMP_B)
 EMU_UNIMPLEMENTED(emu_CMP_C)
 EMU_UNIMPLEMENTED(emu_CMP_D)
@@ -1065,7 +1226,13 @@ EMU_UNIMPLEMENTED(emu_JPO)
 EMU_UNIMPLEMENTED(emu_XTHL)
 EMU_UNIMPLEMENTED(emu_CPO)
 EMU_UNIMPLEMENTED(emu_PUSH_H)
-EMU_UNIMPLEMENTED(emu_ANI)
+
+int emu_ANI(emu_state_t *state) {
+    emu_and(state, DATA);
+    state->cf.ac = 0;
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_4)
 EMU_UNIMPLEMENTED(emu_RPE)
 EMU_UNIMPLEMENTED(emu_PCHL)
@@ -1084,7 +1251,12 @@ int emu_XCHG(emu_state_t *state) {
 
 EMU_UNIMPLEMENTED(emu_CPE)
 // 0xed --
-EMU_UNIMPLEMENTED(emu_XRI)
+
+int emu_XRI(emu_state_t *state) {
+    emu_xor(state, DATA);
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_5)
 EMU_UNIMPLEMENTED(emu_RP)
 EMU_UNIMPLEMENTED(emu_POP_PSW)
@@ -1092,7 +1264,12 @@ EMU_UNIMPLEMENTED(emu_JP)
 EMU_UNIMPLEMENTED(emu_DI)
 EMU_UNIMPLEMENTED(emu_CP)
 EMU_UNIMPLEMENTED(emu_PUSH_PSW)
-EMU_UNIMPLEMENTED(emu_ORI)
+
+int emu_ORI(emu_state_t *state) {
+    emu_or(state, DATA);
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_6)
 EMU_UNIMPLEMENTED(emu_RM)
 EMU_UNIMPLEMENTED(emu_SPHL)
