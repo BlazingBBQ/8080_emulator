@@ -60,6 +60,87 @@ typedef struct {
     uint8_t *mem;
 } emu_state_t;
 
+/*
+ * parity: Calculates the module 2 sum of the bits of the given value
+ *
+ * Arguments:
+ *   val - value of which to calculate parity
+ *
+ * Returns:
+ *   1 for even parity, 0 for odd parity.
+ */
+int parity(uint8_t val) {
+    int bit_sum = 0;
+    for (int i = 0; i < 8; i++) {
+        bit_sum += (val >> i) & 0x01;
+    }
+
+    return bit_sum % 2 == 0;
+}
+
+/*
+ * carry: Checks if there is a carry-out from the addition of given operands and
+ *        carry-in
+ *
+ * Arguments:
+ *   op1    - first operand
+ *   op2    - second operand
+ *   bit_no - bit to check for carry-out
+ *   cy     - carry-in
+ *
+ * Returns:
+ *   1 for carry-out, 0 for no carry-out.
+ */
+int carry(uint8_t op1, uint8_t op2, uint32_t bit_no, uint8_t cy) {
+    int16_t result = op1 + op2 + cy;
+    /* The bit at target offset will only be changed in resulting value if there
+     * is a carry-out from lower bits.
+     *
+     * https://stackoverflow.com/questions/8034566/overflow-and-carry-flags-on-z80/8037485#8037485
+     */
+    return ((result ^ op1 ^ op2) & (1 << bit_no)) > 0;
+}
+
+/*
+ * emu_update_flags: Updates the flags based on the result of the operation
+ *
+ * Arguments:
+ *   state  - emulator state to update
+ *   result - result of the operation for which to update the flags
+ *
+ * Returns:
+ *   None.
+ */
+void emu_update_flags(emu_state_t *state, uint8_t result) {
+    state->cf.z = (result == 0);
+    state->cf.s = (result >> 7 == 1);
+    state->cf.p = parity(result);
+    /* Carry flags are reset and must explicitely be set by affecting
+     * instructions */
+    state->cf.cy = 0;
+    state->cf.ac = 0;
+}
+
+/*
+ * emu_add: Add given value to the target register and update flags accordingly
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   reg    - pointer to register on which to perform addition
+ *   val    - value to add to register
+ *   cy     - carry-in
+ *
+ * Returns:
+ *   None.
+ */
+void emu_add(emu_state_t *state, uint8_t *reg, uint8_t val, uint8_t cy) {
+    uint8_t result = *reg + val + cy;
+    emu_update_flags(state, result);
+    state->cf.cy = carry(*reg, val, 8, cy);
+    state->cf.ac = carry(*reg, val, 4, cy);
+    *reg = result;
+}
+
 EMU_UNIMPLEMENTED(emu_unimplemented)
 
 /* --- 8080 Instructions --- */
@@ -551,14 +632,46 @@ int emu_MOV_A_A(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_ADD_B)
-EMU_UNIMPLEMENTED(emu_ADD_C)
-EMU_UNIMPLEMENTED(emu_ADD_D)
-EMU_UNIMPLEMENTED(emu_ADD_E)
-EMU_UNIMPLEMENTED(emu_ADD_H)
-EMU_UNIMPLEMENTED(emu_ADD_L)
-EMU_UNIMPLEMENTED(emu_ADD_M)
-EMU_UNIMPLEMENTED(emu_ADD_A)
+int emu_ADD_B(emu_state_t *state) {
+    emu_add(state, &state->a, state->b, 0);
+    return 1;
+}
+
+int emu_ADD_C(emu_state_t *state) {
+    emu_add(state, &state->a, state->c, 0);
+    return 1;
+}
+
+int emu_ADD_D(emu_state_t *state) {
+    emu_add(state, &state->a, state->d, 0);
+    return 1;
+}
+
+int emu_ADD_E(emu_state_t *state) {
+    emu_add(state, &state->a, state->e, 0);
+    return 1;
+}
+
+int emu_ADD_H(emu_state_t *state) {
+    emu_add(state, &state->a, state->h, 0);
+    return 1;
+}
+
+int emu_ADD_L(emu_state_t *state) {
+    emu_add(state, &state->a, state->l, 0);
+    return 1;
+}
+
+int emu_ADD_M(emu_state_t *state) {
+    emu_add(state, &state->a, MEM_HL, 0);
+    return 1;
+}
+
+int emu_ADD_A(emu_state_t *state) {
+    emu_add(state, &state->a, state->a, 0);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_ADC_B)
 EMU_UNIMPLEMENTED(emu_ADC_C)
 EMU_UNIMPLEMENTED(emu_ADC_D)
@@ -621,7 +734,12 @@ EMU_UNIMPLEMENTED(emu_JNZ)
 EMU_UNIMPLEMENTED(emu_JMP)
 EMU_UNIMPLEMENTED(emu_CNZ)
 EMU_UNIMPLEMENTED(emu_PUSH_B)
-EMU_UNIMPLEMENTED(emu_ADI)
+
+int emu_ADI(emu_state_t *state) {
+    emu_add(state, &state->a, DATA, 0);
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_0)
 EMU_UNIMPLEMENTED(emu_RZ)
 EMU_UNIMPLEMENTED(emu_RET)
