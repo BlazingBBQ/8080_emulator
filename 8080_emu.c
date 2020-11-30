@@ -26,6 +26,9 @@
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
 #define DATA (LOW_ORDER_DATA)
 
+#define PCH ((state->pc >> 8) & 0xff)
+#define PCL (state->pc & 0xff)
+
 // TODO: Give these more descriptive names
 #define DATA_ADDR ((HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA)
 
@@ -37,6 +40,8 @@
 #define MEM_HL (*(state->mem + HL))
 /* The content of the memory location, whose address is in SP registers. */
 #define MEM_SP (*(state->mem + SP))
+#define MEM_SP_1 (*(state->mem + SP - 1))
+#define MEM_SP_2 (*(state->mem + SP - 2))
 
 /* The content of the memory location, whose address is specified in byte 2 and
  * byte 3 of the instruction. */
@@ -67,6 +72,21 @@ typedef struct {
     condition_flags_t cf;
     uint8_t *mem;
 } emu_state_t;
+
+/*
+ * set_sp: Sets the SP high and low order bytes
+ *
+ * Arguments:
+ *   state  - emulator state to update
+ *   sp     - the new value of the SP
+ *
+ * Returns:
+ *   None.
+ */
+void set_sp(emu_state_t *state, uint16_t sp) {
+    RP_SP_RH = ((sp >> 8) & 0xff);
+    RP_SP_RL = (sp & 0xff);
+}
 
 /*
  * parity: Calculates the module 2 sum of the bits of the given value
@@ -397,6 +417,25 @@ void emu_stc(emu_state_t *state) { state->cf.cy = 1; }
 void emu_jmp(emu_state_t *state, uint8_t condition) {
     if (condition) {
         state->pc = DATA_ADDR;
+    }
+}
+
+/*
+ * emu_call: Push PC to stack and jump if the specified confition is true
+ *
+ * Arguments:
+ *   state     - emulator state
+ *   condition - condition to evaluate
+ *
+ * Returns:
+ *   None.
+ */
+void emu_call(emu_state_t *state, uint8_t condition) {
+    if (condition) {
+        MEM_SP_1 = PCH;
+        MEM_SP_2 = PCL;
+        set_sp(state, SP - 2);
+        emu_jmp(state, 1);
     }
 }
 
@@ -1362,8 +1401,9 @@ EMU_UNIMPLEMENTED(emu_RNZ)
 EMU_UNIMPLEMENTED(emu_POP_B)
 
 int emu_JNZ(emu_state_t *state) {
-    emu_jmp(state, !state->cf.z);
-    return 0;
+    int j = !state->cf.z;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 int emu_JMP(emu_state_t *state) {
@@ -1371,7 +1411,12 @@ int emu_JMP(emu_state_t *state) {
     return 0;
 }
 
-EMU_UNIMPLEMENTED(emu_CNZ)
+int emu_CNZ(emu_state_t *state) {
+    int c = !state->cf.z;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
 EMU_UNIMPLEMENTED(emu_PUSH_B)
 
 int emu_ADI(emu_state_t *state) {
@@ -1384,13 +1429,23 @@ EMU_UNIMPLEMENTED(emu_RZ)
 EMU_UNIMPLEMENTED(emu_RET)
 
 int emu_JZ(emu_state_t *state) {
-    emu_jmp(state, state->cf.z);
-    return 0;
+    int j = state->cf.z;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 // 0xcb --
-EMU_UNIMPLEMENTED(emu_CZ)
-EMU_UNIMPLEMENTED(emu_CALL)
+
+int emu_CZ(emu_state_t *state) {
+    int c = state->cf.z;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
+int emu_CALL(emu_state_t *state) {
+    emu_call(state, 1);
+    return 0;
+}
 
 int emu_ACI(emu_state_t *state) {
     emu_add(state, &state->a, DATA, state->cf.cy);
@@ -1402,12 +1457,19 @@ EMU_UNIMPLEMENTED(emu_RNC)
 EMU_UNIMPLEMENTED(emu_POP_D)
 
 int emu_JNC(emu_state_t *state) {
-    emu_jmp(state, !state->cf.cy);
-    return 0;
+    int j = !state->cf.cy;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 EMU_UNIMPLEMENTED(emu_OUT)
-EMU_UNIMPLEMENTED(emu_CNC)
+
+int emu_CNC(emu_state_t *state) {
+    int c = !state->cf.cy;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
 EMU_UNIMPLEMENTED(emu_PUSH_D)
 
 int emu_SUI(emu_state_t *state) {
@@ -1420,12 +1482,19 @@ EMU_UNIMPLEMENTED(emu_RC)
 // 0xd9 --
 
 int emu_JC(emu_state_t *state) {
-    emu_jmp(state, state->cf.cy);
-    return 0;
+    int j = state->cf.cy;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 EMU_UNIMPLEMENTED(emu_IN)
-EMU_UNIMPLEMENTED(emu_CC)
+
+int emu_CC(emu_state_t *state) {
+    int c = state->cf.cy;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
 // 0xdd --
 
 int emu_SBI(emu_state_t *state) {
@@ -1439,12 +1508,19 @@ EMU_UNIMPLEMENTED(emu_POP_H)
 
 int emu_JPO(emu_state_t *state) {
     /* Jump if parity odd (P = 0) */
-    emu_jmp(state, state->cf.p == 0);
-    return 0;
+    int j = state->cf.p == 0;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 EMU_UNIMPLEMENTED(emu_XTHL)
-EMU_UNIMPLEMENTED(emu_CPO)
+int emu_CPO(emu_state_t *state) {
+    /* Call if parity odd (P = 0) */
+    int c = state->cf.p == 0;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
 EMU_UNIMPLEMENTED(emu_PUSH_H)
 
 int emu_ANI(emu_state_t *state) {
@@ -1458,9 +1534,10 @@ EMU_UNIMPLEMENTED(emu_RPE)
 EMU_UNIMPLEMENTED(emu_PCHL)
 
 int emu_JPE(emu_state_t *state) {
-    /* Jump if parity event (P = 1) */
-    emu_jmp(state, state->cf.p == 1);
-    return 0;
+    /* Jump if parity even (P = 1) */
+    int j = state->cf.p == 1;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 int emu_XCHG(emu_state_t *state) {
@@ -1474,7 +1551,13 @@ int emu_XCHG(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_CPE)
+int emu_CPE(emu_state_t *state) {
+    /* Call if parity even (P = 1) */
+    int c = state->cf.p == 1;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
 // 0xed --
 
 int emu_XRI(emu_state_t *state) {
@@ -1487,12 +1570,19 @@ EMU_UNIMPLEMENTED(emu_RP)
 EMU_UNIMPLEMENTED(emu_POP_PSW)
 
 int emu_JP(emu_state_t *state) {
-    emu_jmp(state, !state->cf.s);
-    return 0;
+    int j = !state->cf.s;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 EMU_UNIMPLEMENTED(emu_DI)
-EMU_UNIMPLEMENTED(emu_CP)
+
+int emu_CP(emu_state_t *state) {
+    int c = !state->cf.s;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
 EMU_UNIMPLEMENTED(emu_PUSH_PSW)
 
 int emu_ORI(emu_state_t *state) {
@@ -1505,12 +1595,19 @@ EMU_UNIMPLEMENTED(emu_RM)
 EMU_UNIMPLEMENTED(emu_SPHL)
 
 int emu_JM(emu_state_t *state) {
-    emu_jmp(state, state->cf.s);
-    return 0;
+    int j = state->cf.s;
+    emu_jmp(state, j);
+    return (j) ? 0 : 3;
 }
 
 EMU_UNIMPLEMENTED(emu_EI)
-EMU_UNIMPLEMENTED(emu_CM)
+
+int emu_CM(emu_state_t *state) {
+    int c = state->cf.s;
+    emu_call(state, c);
+    return (c) ? 0 : 3;
+}
+
 // 0xfc --
 
 int emu_CPI(emu_state_t *state) {
