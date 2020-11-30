@@ -6,6 +6,7 @@
 #define INSTR_BASE(name, size, format...)                           \
     int disasm_##name(unsigned char *codebuffer, unsigned int pc) { \
         unsigned char *codebyte = &codebuffer[pc];                  \
+        printf("%04x:      ", pc);                                  \
         printf(format);                                             \
         printf("\n");                                               \
         return size;                                                \

@@ -26,6 +26,9 @@
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
 #define DATA (LOW_ORDER_DATA)
 
+// TODO: Give these more descriptive names
+#define DATA_ADDR ((HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA)
+
 /* The content of the memory location, whose address is in registers B and C. */
 #define MEM_BC (*(state->mem + BC))
 /* The content of the memory location, whose address is in registers D and E. */
@@ -37,9 +40,9 @@
 
 /* The content of the memory location, whose address is specified in byte 2 and
  * byte 3 of the instruction. */
-#define MEM_ADDR (*(state->mem + (HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA))
+#define MEM_ADDR (*(state->mem + DATA_ADDR))
 /* The content of the memory location at the succeeding address. */
-#define MEM_ADDR_1 (*(state->mem + (HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA + 1))
+#define MEM_ADDR_1 (*(state->mem + DATA_ADDR + 1))
 
 typedef struct {
     uint8_t z : 1;    // Zero
@@ -380,6 +383,22 @@ void emu_cmc(emu_state_t *state) { state->cf.cy = !state->cf.cy; }
  *   None.
  */
 void emu_stc(emu_state_t *state) { state->cf.cy = 1; }
+
+/*
+ * emu_jmp: Sets the program counter if the specified confition is true
+ *
+ * Arguments:
+ *   state     - emulator state
+ *   condition - condition to evaluate
+ *
+ * Returns:
+ *   None.
+ */
+void emu_jmp(emu_state_t *state, uint8_t condition) {
+    if (condition) {
+        state->pc = DATA_ADDR;
+    }
+}
 
 EMU_UNIMPLEMENTED(emu_unimplemented)
 
@@ -1341,8 +1360,17 @@ int emu_CMP_A(emu_state_t *state) {
 
 EMU_UNIMPLEMENTED(emu_RNZ)
 EMU_UNIMPLEMENTED(emu_POP_B)
-EMU_UNIMPLEMENTED(emu_JNZ)
-EMU_UNIMPLEMENTED(emu_JMP)
+
+int emu_JNZ(emu_state_t *state) {
+    emu_jmp(state, !state->cf.z);
+    return 0;
+}
+
+int emu_JMP(emu_state_t *state) {
+    emu_jmp(state, 1);
+    return 0;
+}
+
 EMU_UNIMPLEMENTED(emu_CNZ)
 EMU_UNIMPLEMENTED(emu_PUSH_B)
 
@@ -1354,7 +1382,12 @@ int emu_ADI(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RST_0)
 EMU_UNIMPLEMENTED(emu_RZ)
 EMU_UNIMPLEMENTED(emu_RET)
-EMU_UNIMPLEMENTED(emu_JZ)
+
+int emu_JZ(emu_state_t *state) {
+    emu_jmp(state, state->cf.z);
+    return 0;
+}
+
 // 0xcb --
 EMU_UNIMPLEMENTED(emu_CZ)
 EMU_UNIMPLEMENTED(emu_CALL)
@@ -1367,7 +1400,12 @@ int emu_ACI(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RST_1)
 EMU_UNIMPLEMENTED(emu_RNC)
 EMU_UNIMPLEMENTED(emu_POP_D)
-EMU_UNIMPLEMENTED(emu_JNC)
+
+int emu_JNC(emu_state_t *state) {
+    emu_jmp(state, !state->cf.cy);
+    return 0;
+}
+
 EMU_UNIMPLEMENTED(emu_OUT)
 EMU_UNIMPLEMENTED(emu_CNC)
 EMU_UNIMPLEMENTED(emu_PUSH_D)
@@ -1380,7 +1418,12 @@ int emu_SUI(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RST_2)
 EMU_UNIMPLEMENTED(emu_RC)
 // 0xd9 --
-EMU_UNIMPLEMENTED(emu_JC)
+
+int emu_JC(emu_state_t *state) {
+    emu_jmp(state, state->cf.cy);
+    return 0;
+}
+
 EMU_UNIMPLEMENTED(emu_IN)
 EMU_UNIMPLEMENTED(emu_CC)
 // 0xdd --
@@ -1393,7 +1436,13 @@ int emu_SBI(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RST_3)
 EMU_UNIMPLEMENTED(emu_RPO)
 EMU_UNIMPLEMENTED(emu_POP_H)
-EMU_UNIMPLEMENTED(emu_JPO)
+
+int emu_JPO(emu_state_t *state) {
+    /* Jump if parity odd (P = 0) */
+    emu_jmp(state, state->cf.p == 0);
+    return 0;
+}
+
 EMU_UNIMPLEMENTED(emu_XTHL)
 EMU_UNIMPLEMENTED(emu_CPO)
 EMU_UNIMPLEMENTED(emu_PUSH_H)
@@ -1407,7 +1456,12 @@ int emu_ANI(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RST_4)
 EMU_UNIMPLEMENTED(emu_RPE)
 EMU_UNIMPLEMENTED(emu_PCHL)
-EMU_UNIMPLEMENTED(emu_JPE)
+
+int emu_JPE(emu_state_t *state) {
+    /* Jump if parity event (P = 1) */
+    emu_jmp(state, state->cf.p == 1);
+    return 0;
+}
 
 int emu_XCHG(emu_state_t *state) {
     uint8_t tmp_h = state->h;
@@ -1431,7 +1485,12 @@ int emu_XRI(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RST_5)
 EMU_UNIMPLEMENTED(emu_RP)
 EMU_UNIMPLEMENTED(emu_POP_PSW)
-EMU_UNIMPLEMENTED(emu_JP)
+
+int emu_JP(emu_state_t *state) {
+    emu_jmp(state, !state->cf.s);
+    return 0;
+}
+
 EMU_UNIMPLEMENTED(emu_DI)
 EMU_UNIMPLEMENTED(emu_CP)
 EMU_UNIMPLEMENTED(emu_PUSH_PSW)
@@ -1444,7 +1503,12 @@ int emu_ORI(emu_state_t *state) {
 EMU_UNIMPLEMENTED(emu_RST_6)
 EMU_UNIMPLEMENTED(emu_RM)
 EMU_UNIMPLEMENTED(emu_SPHL)
-EMU_UNIMPLEMENTED(emu_JM)
+
+int emu_JM(emu_state_t *state) {
+    emu_jmp(state, state->cf.s);
+    return 0;
+}
+
 EMU_UNIMPLEMENTED(emu_EI)
 EMU_UNIMPLEMENTED(emu_CM)
 // 0xfc --
