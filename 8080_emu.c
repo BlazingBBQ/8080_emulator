@@ -17,10 +17,10 @@
 #define RP_SP_RH (state->sp_h)
 #define RP_SP_RL (state->sp_l)
 
-#define BC ((RP_BC_RH << sizeof(uint8_t)) + RP_BC_RL)
-#define DE ((RP_DE_RH << sizeof(uint8_t)) + RP_DE_RL)
-#define HL ((RP_HL_RH << sizeof(uint8_t)) + RP_HL_RL)
-#define SP ((RP_SP_RH << sizeof(uint8_t)) + RP_SP_RL)
+#define BC ((RP_BC_RH << 8) + RP_BC_RL)
+#define DE ((RP_DE_RH << 8) + RP_DE_RL)
+#define HL ((RP_HL_RH << 8) + RP_HL_RL)
+#define SP ((RP_SP_RH << 8) + RP_SP_RL)
 
 #define LOW_ORDER_DATA (state->mem[state->pc + 1])
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
@@ -37,11 +37,9 @@
 
 /* The content of the memory location, whose address is specified in byte 2 and
  * byte 3 of the instruction. */
-#define MEM_ADDR \
-    (*(state->mem + (HIGH_ORDER_DATA << sizeof(uint8_t)) + LOW_ORDER_DATA))
+#define MEM_ADDR (*(state->mem + (HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA))
 /* The content of the memory location at the succeeding address. */
-#define MEM_ADDR_1 \
-    (*(state->mem + (HIGH_ORDER_DATA << sizeof(uint8_t)) + LOW_ORDER_DATA + 1))
+#define MEM_ADDR_1 (*(state->mem + (HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA + 1))
 
 typedef struct {
     uint8_t z : 1;    // Zero
