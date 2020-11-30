@@ -424,6 +424,26 @@ void emu_call(emu_state_t *state, uint8_t condition) {
     }
 }
 
+/*
+ * emu_ret: Restore PC from stack if the specified confition is true
+ *
+ * Arguments:
+ *   state     - emulator state
+ *   condition - condition to evaluate
+ *
+ * Returns:
+ *   None.
+ */
+void emu_ret(emu_state_t *state, uint8_t condition) {
+    if (condition) {
+        uint8_t pcl = MEM(SP);
+        uint8_t pch = MEM(SP + 1);
+        set_sp(state, SP + 2);
+
+        state->pc = (pch << 8) + pcl;
+    }
+}
+
 EMU_UNIMPLEMENTED(emu_unimplemented)
 
 /* --- 8080 Instructions --- */
@@ -1384,7 +1404,12 @@ int emu_CMP_A(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_RNZ)
+int emu_RNZ(emu_state_t *state) {
+    int r = !state->cf.z;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
 EMU_UNIMPLEMENTED(emu_POP_B)
 
 int emu_JNZ(emu_state_t *state) {
@@ -1412,8 +1437,17 @@ int emu_ADI(emu_state_t *state) {
 }
 
 EMU_UNIMPLEMENTED(emu_RST_0)
-EMU_UNIMPLEMENTED(emu_RZ)
-EMU_UNIMPLEMENTED(emu_RET)
+
+int emu_RZ(emu_state_t *state) {
+    int r = state->cf.z;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
+int emu_RET(emu_state_t *state) {
+    emu_ret(state, 1);
+    return 0;
+}
 
 int emu_JZ(emu_state_t *state) {
     int j = state->cf.z;
@@ -1440,7 +1474,13 @@ int emu_ACI(emu_state_t *state) {
 }
 
 EMU_UNIMPLEMENTED(emu_RST_1)
-EMU_UNIMPLEMENTED(emu_RNC)
+
+int emu_RNC(emu_state_t *state) {
+    int r = !state->cf.cy;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
 EMU_UNIMPLEMENTED(emu_POP_D)
 
 int emu_JNC(emu_state_t *state) {
@@ -1465,7 +1505,13 @@ int emu_SUI(emu_state_t *state) {
 }
 
 EMU_UNIMPLEMENTED(emu_RST_2)
-EMU_UNIMPLEMENTED(emu_RC)
+
+int emu_RC(emu_state_t *state) {
+    int r = state->cf.cy;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
 // 0xd9 --
 
 int emu_JC(emu_state_t *state) {
@@ -1490,7 +1536,14 @@ int emu_SBI(emu_state_t *state) {
 }
 
 EMU_UNIMPLEMENTED(emu_RST_3)
-EMU_UNIMPLEMENTED(emu_RPO)
+
+int emu_RPO(emu_state_t *state) {
+    /* Ret if parity odd (P = 0) */
+    int r = state->cf.p == 0;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
 EMU_UNIMPLEMENTED(emu_POP_H)
 
 int emu_JPO(emu_state_t *state) {
@@ -1517,7 +1570,14 @@ int emu_ANI(emu_state_t *state) {
 }
 
 EMU_UNIMPLEMENTED(emu_RST_4)
-EMU_UNIMPLEMENTED(emu_RPE)
+
+int emu_RPE(emu_state_t *state) {
+    /* Ret if parity even (P = 1) */
+    int r = state->cf.p == 1;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
 EMU_UNIMPLEMENTED(emu_PCHL)
 
 int emu_JPE(emu_state_t *state) {
@@ -1553,7 +1613,13 @@ int emu_XRI(emu_state_t *state) {
 }
 
 EMU_UNIMPLEMENTED(emu_RST_5)
-EMU_UNIMPLEMENTED(emu_RP)
+
+int emu_RP(emu_state_t *state) {
+    int r = !state->cf.s;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
 EMU_UNIMPLEMENTED(emu_POP_PSW)
 
 int emu_JP(emu_state_t *state) {
@@ -1578,7 +1644,13 @@ int emu_ORI(emu_state_t *state) {
 }
 
 EMU_UNIMPLEMENTED(emu_RST_6)
-EMU_UNIMPLEMENTED(emu_RM)
+
+int emu_RM(emu_state_t *state) {
+    int r = state->cf.s;
+    emu_ret(state, r);
+    return (r) ? 0 : 1;
+}
+
 EMU_UNIMPLEMENTED(emu_SPHL)
 
 int emu_JM(emu_state_t *state) {
