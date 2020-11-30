@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+// TODO: Dump state to console and print out instruction trace
 #define EMU_UNIMPLEMENTED(name)    \
     int name(emu_state_t *state) { \
         (void)(state);             \
@@ -266,6 +267,26 @@ void emu_or(emu_state_t *state, uint8_t val) {
     state->a |= val;
     emu_update_zsp(state, state->a);
     state->cf.cy = 0;
+    state->cf.ac = 0;
+}
+
+/*
+ * emu_cmp: Subtracts the contents of the register from the accumulator and sets
+ *          the condition flags accordingly.
+ *
+ * Arguments:
+ *   state  - emulator state
+ *   val    - register to compare with accumulator
+ *
+ * Returns:
+ *   None.
+ */
+void emu_cmp(emu_state_t *state, uint8_t *reg) {
+    emu_update_zsp(state, state->a - *reg);
+    /* Unnecessary but the manual explicitely mentions this:
+     * The Z flag is set to 1 if (A) = (r).                  */
+    state->cf.z = (state->a == *reg);
+    state->cf.cy = (state->a < *reg);
     state->cf.ac = 0;
 }
 
@@ -1160,14 +1181,46 @@ int emu_ORA_A(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_CMP_B)
-EMU_UNIMPLEMENTED(emu_CMP_C)
-EMU_UNIMPLEMENTED(emu_CMP_D)
-EMU_UNIMPLEMENTED(emu_CMP_E)
-EMU_UNIMPLEMENTED(emu_CMP_H)
-EMU_UNIMPLEMENTED(emu_CMP_L)
-EMU_UNIMPLEMENTED(emu_CMP_M)
-EMU_UNIMPLEMENTED(emu_CMP_A)
+int emu_CMP_B(emu_state_t *state) {
+    emu_cmp(state, state->b);
+    return 1;
+}
+
+int emu_CMP_C(emu_state_t *state) {
+    emu_cmp(state, state->c);
+    return 1;
+}
+
+int emu_CMP_D(emu_state_t *state) {
+    emu_cmp(state, state->d);
+    return 1;
+}
+
+int emu_CMP_E(emu_state_t *state) {
+    emu_cmp(state, state->e);
+    return 1;
+}
+
+int emu_CMP_H(emu_state_t *state) {
+    emu_cmp(state, state->h);
+    return 1;
+}
+
+int emu_CMP_L(emu_state_t *state) {
+    emu_cmp(state, state->l);
+    return 1;
+}
+
+int emu_CMP_M(emu_state_t *state) {
+    emu_cmp(state, MEM_HL);
+    return 1;
+}
+
+int emu_CMP_A(emu_state_t *state) {
+    emu_cmp(state, state->a);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_RNZ)
 EMU_UNIMPLEMENTED(emu_POP_B)
 EMU_UNIMPLEMENTED(emu_JNZ)
@@ -1277,14 +1330,22 @@ EMU_UNIMPLEMENTED(emu_JM)
 EMU_UNIMPLEMENTED(emu_EI)
 EMU_UNIMPLEMENTED(emu_CM)
 // 0xfc --
-EMU_UNIMPLEMENTED(emu_CPI)
+
+int emu_CPI(emu_state_t *state) {
+    emu_cmp(state, DATA);
+    return 2;
+}
+
 EMU_UNIMPLEMENTED(emu_RST_7)
 
 /*
  * emu_handlers: Emulation handler functions, indexed by opcode.
  *
+ * Arguments: 
+ *   state  - pointer to current emulator state
+ * 
  * Returns:
- *      Number of bytes to advance pc.
+ *   Number of bytes to advance pc.
  */
 int (*emu_handlers[0x100])(emu_state_t *state) = {
     emu_NOP,            // 0x00
