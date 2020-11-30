@@ -26,28 +26,13 @@
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
 #define DATA (LOW_ORDER_DATA)
 
+#define DATA_ADDR ((HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA)
+
 #define PCH ((state->pc >> 8) & 0xff)
 #define PCL (state->pc & 0xff)
 
-// TODO: Give these more descriptive names
-#define DATA_ADDR ((HIGH_ORDER_DATA << 8) + LOW_ORDER_DATA)
-
-/* The content of the memory location, whose address is in registers B and C. */
-#define MEM_BC (*(state->mem + BC))
-/* The content of the memory location, whose address is in registers D and E. */
-#define MEM_DE (*(state->mem + DE))
-/* The content of the memory location, whose address is in registers H and L. */
-#define MEM_HL (*(state->mem + HL))
-/* The content of the memory location, whose address is in SP registers. */
-#define MEM_SP (*(state->mem + SP))
-#define MEM_SP_1 (*(state->mem + SP - 1))
-#define MEM_SP_2 (*(state->mem + SP - 2))
-
-/* The content of the memory location, whose address is specified in byte 2 and
- * byte 3 of the instruction. */
-#define MEM_ADDR (*(state->mem + DATA_ADDR))
-/* The content of the memory location at the succeeding address. */
-#define MEM_ADDR_1 (*(state->mem + DATA_ADDR + 1))
+/* The content of the memory location at the specified address. */
+#define MEM(addr) (*(state->mem + (addr)))
 
 typedef struct {
     uint8_t z : 1;    // Zero
@@ -432,8 +417,8 @@ void emu_jmp(emu_state_t *state, uint8_t condition) {
  */
 void emu_call(emu_state_t *state, uint8_t condition) {
     if (condition) {
-        MEM_SP_1 = PCH;
-        MEM_SP_2 = PCL;
+        MEM(SP - 1) = PCH;
+        MEM(SP - 2) = PCL;
         set_sp(state, SP - 2);
         emu_jmp(state, 1);
     }
@@ -455,12 +440,12 @@ int emu_LXI_B(emu_state_t *state) {
 }
 
 int emu_STAX_B(emu_state_t *state) {
-    MEM_BC = state->a;
+    MEM(BC) = state->a;
     return 1;
 }
 
 int emu_INX_B(emu_state_t *state) {
-    MEM_BC += 1;
+    MEM(BC) += 1;
     return 1;
 }
 
@@ -492,12 +477,12 @@ int emu_DAD_B(emu_state_t *state) {
 }
 
 int emu_LDAX_B(emu_state_t *state) {
-    state->a = MEM_BC;
+    state->a = MEM(BC);
     return 1;
 }
 
 int emu_DCX_B(emu_state_t *state) {
-    MEM_BC -= 1;
+    MEM(BC) -= 1;
     return 1;
 }
 
@@ -530,12 +515,12 @@ int emu_LXI_D(emu_state_t *state) {
 }
 
 int emu_STAX_D(emu_state_t *state) {
-    MEM_DE = state->a;
+    MEM(DE) = state->a;
     return 1;
 }
 
 int emu_INX_D(emu_state_t *state) {
-    MEM_DE += 1;
+    MEM(DE) += 1;
     return 1;
 }
 
@@ -567,12 +552,12 @@ int emu_DAD_D(emu_state_t *state) {
 }
 
 int emu_LDAX_D(emu_state_t *state) {
-    state->a = MEM_DE;
+    state->a = MEM(DE);
     return 1;
 }
 
 int emu_DCX_D(emu_state_t *state) {
-    MEM_DE -= 1;
+    MEM(DE) -= 1;
     return 1;
 }
 
@@ -605,13 +590,13 @@ int emu_LXI_H(emu_state_t *state) {
 }
 
 int emu_SHLD(emu_state_t *state) {
-    MEM_ADDR = state->l;
-    MEM_ADDR_1 = state->h;
+    MEM(DATA_ADDR) = state->l;
+    MEM(DATA_ADDR + 1) = state->h;
     return 3;
 }
 
 int emu_INX_H(emu_state_t *state) {
-    MEM_HL += 1;
+    MEM(HL) += 1;
     return 1;
 }
 
@@ -655,13 +640,13 @@ int emu_DAD_H(emu_state_t *state) {
 }
 
 int emu_LHLD(emu_state_t *state) {
-    state->l = MEM_ADDR;
-    state->h = MEM_ADDR_1;
+    state->l = MEM(DATA_ADDR);
+    state->h = MEM(DATA_ADDR + 1);
     return 3;
 }
 
 int emu_DCX_H(emu_state_t *state) {
-    MEM_HL -= 1;
+    MEM(HL) -= 1;
     return 1;
 }
 
@@ -694,27 +679,29 @@ int emu_LXI_SP(emu_state_t *state) {
 }
 
 int emu_STA(emu_state_t *state) {
-    MEM_ADDR = state->a;
+    MEM(DATA_ADDR) = state->a;
     return 3;
 }
 
 int emu_INX_SP(emu_state_t *state) {
-    MEM_SP += 1;
+    // FIXME: This should increment the value of the register pair, not the
+    // memory contents (same with other INX instructions)
+    MEM(SP) += 1;
     return 1;
 }
 
 int emu_INR_M(emu_state_t *state) {
-    emu_inr(state, &MEM_HL);
+    emu_inr(state, &MEM(HL));
     return 1;
 }
 
 int emu_DCR_M(emu_state_t *state) {
-    emu_dcr(state, &MEM_HL);
+    emu_dcr(state, &MEM(HL));
     return 1;
 }
 
 int emu_MVI_M(emu_state_t *state) {
-    MEM_HL = DATA;
+    MEM(HL) = DATA;
     return 2;
 }
 
@@ -731,12 +718,12 @@ int emu_DAD_SP(emu_state_t *state) {
 }
 
 int emu_LDA(emu_state_t *state) {
-    state->a = MEM_ADDR;
+    state->a = MEM(DATA_ADDR);
     return 3;
 }
 
 int emu_DCX_SP(emu_state_t *state) {
-    MEM_SP -= 1;
+    MEM(SP) -= 1;
     return 1;
 }
 
@@ -791,7 +778,7 @@ int emu_MOV_B_L(emu_state_t *state) {
 }
 
 int emu_MOV_B_M(emu_state_t *state) {
-    state->b = MEM_HL;
+    state->b = MEM(HL);
     return 1;
 }
 
@@ -831,7 +818,7 @@ int emu_MOV_C_L(emu_state_t *state) {
 }
 
 int emu_MOV_C_M(emu_state_t *state) {
-    state->c = MEM_HL;
+    state->c = MEM(HL);
     return 1;
 }
 
@@ -871,7 +858,7 @@ int emu_MOV_D_L(emu_state_t *state) {
 }
 
 int emu_MOV_D_M(emu_state_t *state) {
-    state->d = MEM_HL;
+    state->d = MEM(HL);
     return 1;
 }
 
@@ -911,7 +898,7 @@ int emu_MOV_E_L(emu_state_t *state) {
 }
 
 int emu_MOV_E_M(emu_state_t *state) {
-    state->e = MEM_HL;
+    state->e = MEM(HL);
     return 1;
 }
 
@@ -951,7 +938,7 @@ int emu_MOV_H_L(emu_state_t *state) {
 }
 
 int emu_MOV_H_M(emu_state_t *state) {
-    state->h = MEM_HL;
+    state->h = MEM(HL);
     return 1;
 }
 
@@ -991,7 +978,7 @@ int emu_MOV_L_L(emu_state_t *state) {
 }
 
 int emu_MOV_L_M(emu_state_t *state) {
-    state->l = MEM_HL;
+    state->l = MEM(HL);
     return 1;
 }
 
@@ -1001,39 +988,39 @@ int emu_MOV_L_A(emu_state_t *state) {
 }
 
 int emu_MOV_M_B(emu_state_t *state) {
-    MEM_HL = state->b;
+    MEM(HL) = state->b;
     return 1;
 }
 
 int emu_MOV_M_C(emu_state_t *state) {
-    MEM_HL = state->c;
+    MEM(HL) = state->c;
     return 1;
 }
 
 int emu_MOV_M_D(emu_state_t *state) {
-    MEM_HL = state->d;
+    MEM(HL) = state->d;
     return 1;
 }
 
 int emu_MOV_M_E(emu_state_t *state) {
-    MEM_HL = state->e;
+    MEM(HL) = state->e;
     return 1;
 }
 
 int emu_MOV_M_H(emu_state_t *state) {
-    MEM_HL = state->h;
+    MEM(HL) = state->h;
     return 1;
 }
 
 int emu_MOV_M_L(emu_state_t *state) {
-    MEM_HL = state->l;
+    MEM(HL) = state->l;
     return 1;
 }
 
 EMU_UNIMPLEMENTED(emu_HLT)
 
 int emu_MOV_M_A(emu_state_t *state) {
-    MEM_HL = state->a;
+    MEM(HL) = state->a;
     return 1;
 }
 
@@ -1068,7 +1055,7 @@ int emu_MOV_A_L(emu_state_t *state) {
 }
 
 int emu_MOV_A_M(emu_state_t *state) {
-    state->a = MEM_HL;
+    state->a = MEM(HL);
     return 1;
 }
 
@@ -1108,7 +1095,7 @@ int emu_ADD_L(emu_state_t *state) {
 }
 
 int emu_ADD_M(emu_state_t *state) {
-    emu_add(state, &state->a, MEM_HL, 0);
+    emu_add(state, &state->a, MEM(HL), 0);
     return 1;
 }
 
@@ -1148,7 +1135,7 @@ int emu_ADC_L(emu_state_t *state) {
 }
 
 int emu_ADC_M(emu_state_t *state) {
-    emu_add(state, &state->a, MEM_HL, state->cf.cy);
+    emu_add(state, &state->a, MEM(HL), state->cf.cy);
     return 1;
 }
 
@@ -1188,7 +1175,7 @@ int emu_SUB_L(emu_state_t *state) {
 }
 
 int emu_SUB_M(emu_state_t *state) {
-    emu_sub(state, &state->a, MEM_HL, 0);
+    emu_sub(state, &state->a, MEM(HL), 0);
     return 1;
 }
 
@@ -1228,7 +1215,7 @@ int emu_SBB_L(emu_state_t *state) {
 }
 
 int emu_SBB_M(emu_state_t *state) {
-    emu_sub(state, &state->a, MEM_HL, state->cf.cy);
+    emu_sub(state, &state->a, MEM(HL), state->cf.cy);
     return 1;
 }
 
@@ -1268,7 +1255,7 @@ int emu_ANA_L(emu_state_t *state) {
 }
 
 int emu_ANA_M(emu_state_t *state) {
-    emu_and(state, MEM_HL);
+    emu_and(state, MEM(HL));
     return 1;
 }
 
@@ -1308,7 +1295,7 @@ int emu_XRA_L(emu_state_t *state) {
 }
 
 int emu_XRA_M(emu_state_t *state) {
-    emu_xor(state, MEM_HL);
+    emu_xor(state, MEM(HL));
     return 1;
 }
 
@@ -1348,7 +1335,7 @@ int emu_ORA_L(emu_state_t *state) {
 }
 
 int emu_ORA_M(emu_state_t *state) {
-    emu_or(state, MEM_HL);
+    emu_or(state, MEM(HL));
     return 1;
 }
 
@@ -1388,7 +1375,7 @@ int emu_CMP_L(emu_state_t *state) {
 }
 
 int emu_CMP_M(emu_state_t *state) {
-    emu_cmp(state, MEM_HL);
+    emu_cmp(state, MEM(HL));
     return 1;
 }
 
