@@ -350,6 +350,39 @@ void emu_rar(emu_state_t *state) {
     state->a = (state->a >> 1) + (old_cy << 7);
 }
 
+/*
+ * emu_cma: Complements the contents of the accumulator
+ *
+ * Arguments:
+ *   state  - emulator state
+ *
+ * Returns:
+ *   None.
+ */
+void emu_cma(emu_state_t *state) { state->a ^= 0xff; }
+
+/*
+ * emu_cmc: Complements the CY flag
+ *
+ * Arguments:
+ *   state  - emulator state
+ *
+ * Returns:
+ *   None.
+ */
+void emu_cmc(emu_state_t *state) { state->cf.cy = !state->cf.cy; }
+
+/*
+ * emu_stc: Sets the CY flag to 1
+ *
+ * Arguments:
+ *   state  - emulator state
+ *
+ * Returns:
+ *   None.
+ */
+void emu_stc(emu_state_t *state) { state->cf.cy = 1; }
+
 EMU_UNIMPLEMENTED(emu_unimplemented)
 
 /* --- 8080 Instructions --- */
@@ -591,7 +624,11 @@ int emu_MVI_L(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_CMA)
+int emu_CMA(emu_state_t *state) {
+    emu_cma(state);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_SIM)
 
 int emu_LXI_SP(emu_state_t *state) {
@@ -625,7 +662,11 @@ int emu_MVI_M(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_STC)
+int emu_STC(emu_state_t *state) {
+    emu_stc(state);
+    return 1;
+}
+
 // 0x38 --
 
 int emu_DAD_SP(emu_state_t *state) {
@@ -658,7 +699,10 @@ int emu_MVI_A(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_CMC)
+int emu_CMC(emu_state_t *state) {
+    emu_cmc(state);
+    return 1;
+}
 
 int emu_MOV_B_B(emu_state_t *state) {
     state->b = state->b;
