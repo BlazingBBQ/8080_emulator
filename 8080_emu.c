@@ -271,23 +271,83 @@ void emu_or(emu_state_t *state, uint8_t val) {
 }
 
 /*
- * emu_cmp: Subtracts the contents of the register from the accumulator and sets
- *          the condition flags accordingly.
+ * emu_cmp: Subtracts the contents of the given value from the accumulator
+ *          and sets the condition flags accordingly.
  *
  * Arguments:
  *   state  - emulator state
- *   val    - register to compare with accumulator
+ *   val    - value to compare with accumulator
  *
  * Returns:
  *   None.
  */
-void emu_cmp(emu_state_t *state, uint8_t *reg) {
-    emu_update_zsp(state, state->a - *reg);
+void emu_cmp(emu_state_t *state, uint8_t val) {
+    emu_update_zsp(state, state->a - val);
     /* Unnecessary but the manual explicitely mentions this:
      * The Z flag is set to 1 if (A) = (r).                  */
-    state->cf.z = (state->a == *reg);
-    state->cf.cy = (state->a < *reg);
+    state->cf.z = (state->a == val);
+    state->cf.cy = (state->a < val);
     state->cf.ac = 0;
+}
+
+/*
+ * emu_rlc: Rotates the contents of the accumulator left one position
+ *
+ * Arguments:
+ *   state  - emulator state
+ *
+ * Returns:
+ *   None.
+ */
+void emu_rlc(emu_state_t *state) {
+    state->cf.cy = state->a >> 7;
+    state->a = (state->a << 1) + state->cf.cy;
+}
+
+/*
+ * emu_rrc: Rotates the contents of the accumulator right one position
+ *
+ * Arguments:
+ *   state  - emulator state
+ *
+ * Returns:
+ *   None.
+ */
+void emu_rrc(emu_state_t *state) {
+    state->cf.cy = state->a & 0x1;
+    state->a = (state->a >> 1) + (state->cf.cy << 7);
+}
+
+/*
+ * emu_ral: Rotates the contents of the accumulator left one position through
+ *          the CY flag
+ *
+ * Arguments:
+ *   state  - emulator state
+ *
+ * Returns:
+ *   None.
+ */
+void emu_ral(emu_state_t *state) {
+    uint8_t old_cy = state->cf.cy;
+    state->cf.cy = state->a >> 7;
+    state->a = (state->a << 1) + old_cy;
+}
+
+/*
+ * emu_rar: Rotates the contents of the accumulator right one position through
+ *          the CY flag
+ *
+ * Arguments:
+ *   state  - emulator state
+ *
+ * Returns:
+ *   None.
+ */
+void emu_rar(emu_state_t *state) {
+    uint8_t old_cy = state->cf.cy;
+    state->cf.cy = state->a & 0x1;
+    state->a = (state->a >> 1) + (old_cy << 7);
 }
 
 EMU_UNIMPLEMENTED(emu_unimplemented)
@@ -330,7 +390,11 @@ int emu_MVI_B(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_RLC)
+int emu_RLC(emu_state_t *state) {
+    emu_rlc(state);
+    return 1;
+}
+
 // 0x08 --
 
 int emu_DAD_B(emu_state_t *state) {
@@ -363,7 +427,11 @@ int emu_MVI_C(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_RRC)
+int emu_RRC(emu_state_t *state) {
+    emu_rrc(state);
+    return 1;
+}
+
 // 0x10 --
 
 int emu_LXI_D(emu_state_t *state) {
@@ -397,7 +465,11 @@ int emu_MVI_D(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_RAL)
+int emu_RAL(emu_state_t *state) {
+    emu_ral(state);
+    return 1;
+}
+
 // 0x18 --
 
 int emu_DAD_D(emu_state_t *state) {
@@ -430,7 +502,11 @@ int emu_MVI_E(emu_state_t *state) {
     return 2;
 }
 
-EMU_UNIMPLEMENTED(emu_RAR)
+int emu_RAR(emu_state_t *state) {
+    emu_rar(state);
+    return 1;
+}
+
 EMU_UNIMPLEMENTED(emu_RIM)
 
 int emu_LXI_H(emu_state_t *state) {
