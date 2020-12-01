@@ -1428,7 +1428,12 @@ int emu_RNZ(emu_state_t *state) {
     return (r) ? 0 : 1;
 }
 
-EMU_UNIMPLEMENTED(emu_POP_B)
+int emu_POP_B(emu_state_t *state) {
+    RP_BC_RL = MEM(SP);
+    RP_BC_RH = MEM(SP + 1);
+    set_sp(state, SP + 2);
+    return 1;
+}
 
 int emu_JNZ(emu_state_t *state) {
     int j = !state->cf.z;
@@ -1447,7 +1452,12 @@ int emu_CNZ(emu_state_t *state) {
     return (c) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_PUSH_B)
+int emu_PUSH_B(emu_state_t *state) {
+    MEM(SP - 1) = RP_BC_RH;
+    MEM(SP - 2) = RP_BC_RL;
+    set_sp(state, SP - 2);
+    return 1;
+}
 
 int emu_ADI(emu_state_t *state) {
     emu_add(state, &state->a, DATA, 0);
@@ -1505,7 +1515,12 @@ int emu_RNC(emu_state_t *state) {
     return (r) ? 0 : 1;
 }
 
-EMU_UNIMPLEMENTED(emu_POP_D)
+int emu_POP_D(emu_state_t *state) {
+    RP_DE_RL = MEM(SP);
+    RP_DE_RH = MEM(SP + 1);
+    set_sp(state, SP + 2);
+    return 1;
+}
 
 int emu_JNC(emu_state_t *state) {
     int j = !state->cf.cy;
@@ -1521,7 +1536,12 @@ int emu_CNC(emu_state_t *state) {
     return (c) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_PUSH_D)
+int emu_PUSH_D(emu_state_t *state) {
+    MEM(SP - 1) = RP_DE_RH;
+    MEM(SP - 2) = RP_DE_RL;
+    set_sp(state, SP - 2);
+    return 1;
+}
 
 int emu_SUI(emu_state_t *state) {
     emu_sub(state, &state->a, DATA, 0);
@@ -1574,7 +1594,12 @@ int emu_RPO(emu_state_t *state) {
     return (r) ? 0 : 1;
 }
 
-EMU_UNIMPLEMENTED(emu_POP_H)
+int emu_POP_H(emu_state_t *state) {
+    RP_HL_RL = MEM(SP);
+    RP_HL_RH = MEM(SP + 1);
+    set_sp(state, SP + 2);
+    return 1;
+}
 
 int emu_JPO(emu_state_t *state) {
     /* Jump if parity odd (P = 0) */
@@ -1591,7 +1616,12 @@ int emu_CPO(emu_state_t *state) {
     return (c) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_PUSH_H)
+int emu_PUSH_H(emu_state_t *state) {
+    MEM(SP - 1) = RP_HL_RH;
+    MEM(SP - 2) = RP_HL_RL;
+    set_sp(state, SP - 2);
+    return 1;
+}
 
 int emu_ANI(emu_state_t *state) {
     emu_and(state, DATA);
@@ -1659,7 +1689,18 @@ int emu_RP(emu_state_t *state) {
     return (r) ? 0 : 1;
 }
 
-EMU_UNIMPLEMENTED(emu_POP_PSW)
+int emu_POP_PSW(emu_state_t *state) {
+    uint8_t status_word = MEM(SP);
+    state->cf.cy = (status_word >> 0) & 1U;
+    state->cf.p  = (status_word >> 2) & 1U;
+    state->cf.ac = (status_word >> 4) & 1U;
+    state->cf.z  = (status_word >> 6) & 1U;
+    state->cf.s  = (status_word >> 7) & 1U;
+
+    state->a = MEM(SP + 1);
+    set_sp(state, SP + 2);
+    return 1;
+}
 
 int emu_JP(emu_state_t *state) {
     int j = !state->cf.s;
@@ -1675,7 +1716,22 @@ int emu_CP(emu_state_t *state) {
     return (c) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_PUSH_PSW)
+int emu_PUSH_PSW(emu_state_t *state) {
+    uint8_t status_word = 0x00;
+    status_word |= state->cf.cy << 0;
+    status_word |= 1U           << 1;
+    status_word |= state->cf.p  << 2;
+    status_word |= 0U           << 3;
+    status_word |= state->cf.ac << 4;
+    status_word |= 0U           << 5;
+    status_word |= state->cf.z  << 6;
+    status_word |= state->cf.s  << 7;
+
+    MEM(SP - 1) = state->a;
+    MEM(SP - 2) = status_word;
+    set_sp(state, SP - 2);
+    return 1;
+}
 
 int emu_ORI(emu_state_t *state) {
     emu_or(state, DATA);
