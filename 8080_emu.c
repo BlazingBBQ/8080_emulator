@@ -1,9 +1,8 @@
 #include <stdint.h>
 
-// TODO: Dump state to console and print out instruction trace
 #define EMU_UNIMPLEMENTED(name)    \
     int name(emu_state_t *state) { \
-        (void)(state);             \
+        dump_state(state);         \
         exit(1);                   \
     }
 
@@ -17,10 +16,10 @@
 #define RP_SP_RH (state->sp_h)
 #define RP_SP_RL (state->sp_l)
 
-#define BC ((RP_BC_RH << 8) + RP_BC_RL)
-#define DE ((RP_DE_RH << 8) + RP_DE_RL)
-#define HL ((RP_HL_RH << 8) + RP_HL_RL)
-#define SP ((RP_SP_RH << 8) + RP_SP_RL)
+#define BC ((RP_BC_RH << 8) | RP_BC_RL)
+#define DE ((RP_DE_RH << 8) | RP_DE_RL)
+#define HL ((RP_HL_RH << 8) | RP_HL_RL)
+#define SP ((RP_SP_RH << 8) | RP_SP_RL)
 
 #define LOW_ORDER_DATA (state->mem[state->pc + 1])
 #define HIGH_ORDER_DATA (state->mem[state->pc + 2])
@@ -32,7 +31,7 @@
 #define PCL (state->pc & 0xff)
 
 /* The content of the memory location at the specified address. */
-#define MEM(addr) (*(state->mem + (addr)))
+#define MEM(addr) (state->mem[addr])
 
 typedef struct {
     uint8_t z : 1;    // Zero
@@ -57,6 +56,25 @@ typedef struct {
     condition_flags_t cf;
     uint8_t *mem;
 } emu_state_t;
+
+void print_flags(emu_state_t *state) {
+    printf("%c%c%c%c%c", state->cf.z ? 'z' : '.', state->cf.s ? 's' : '.',
+           state->cf.p ? 'p' : '.', state->cf.cy ? 'c' : '.',
+           state->cf.ac ? 'a' : '.');
+}
+
+void dump_state(emu_state_t *state) {
+    printf(
+        "------------------ State ------------------\n"
+        " a: %02x,  b: %02x,  c: %02x,  d: %02x,\n"
+        " e: %02x,  h: %02x,  l: %02x,  flags: ",
+        state->a, state->b, state->c, state->d, state->e, state->h, state->l);
+    print_flags(state);
+    printf(
+        "\npc: %04x, (pc): %02x, sp: %04x, (sp): %02x\n"
+        "-------------------------------------------\n",
+        state->pc, state->mem[state->pc], SP, MEM(SP));
+}
 
 /*
  * set_sp: Sets the SP high and low order bytes
@@ -1429,7 +1447,7 @@ int emu_CMP_A(emu_state_t *state) {
 int emu_RNZ(emu_state_t *state) {
     int r = !state->cf.z;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 int emu_POP_B(emu_state_t *state) {
@@ -1476,12 +1494,12 @@ int emu_RST_0(emu_state_t *state) {
 int emu_RZ(emu_state_t *state) {
     int r = state->cf.z;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 int emu_RET(emu_state_t *state) {
     emu_ret(state, 1);
-    return 0;
+    return 3;
 }
 
 int emu_JZ(emu_state_t *state) {
@@ -1516,7 +1534,7 @@ int emu_RST_1(emu_state_t *state) {
 int emu_RNC(emu_state_t *state) {
     int r = !state->cf.cy;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 int emu_POP_D(emu_state_t *state) {
@@ -1560,7 +1578,7 @@ int emu_RST_2(emu_state_t *state) {
 int emu_RC(emu_state_t *state) {
     int r = state->cf.cy;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 // 0xd9 --
@@ -1595,7 +1613,7 @@ int emu_RPO(emu_state_t *state) {
     /* Ret if parity odd (P = 0) */
     int r = state->cf.p == 0;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 int emu_POP_H(emu_state_t *state) {
@@ -1642,7 +1660,7 @@ int emu_RPE(emu_state_t *state) {
     /* Ret if parity even (P = 1) */
     int r = state->cf.p == 1;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 int emu_PCHL(emu_state_t *state) {
@@ -1690,7 +1708,7 @@ int emu_RST_5(emu_state_t *state) {
 int emu_RP(emu_state_t *state) {
     int r = !state->cf.s;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 int emu_POP_PSW(emu_state_t *state) {
@@ -1750,7 +1768,7 @@ int emu_RST_6(emu_state_t *state) {
 int emu_RM(emu_state_t *state) {
     int r = state->cf.s;
     emu_ret(state, r);
-    return (r) ? 0 : 1;
+    return (r) ? 3 : 1;
 }
 
 EMU_UNIMPLEMENTED(emu_SPHL)
