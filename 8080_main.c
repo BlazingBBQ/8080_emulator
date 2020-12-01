@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
 
     int psize = 0;
     emu_state_t state = {0};
+    state.interrupts_enabled = 1;  // Enable interrupts by default
     state.mem = malloc(0x8000);
 
     // Memory map information from:
@@ -54,11 +55,13 @@ int main(int argc, char **argv) {
     unsigned int opcode;
     unsigned int instr_cnt = 0;
     while (state.pc < psize) {
+        if (state.halted) continue;
+
         opcode = state.mem[state.pc];
 
-        printf("%08d ", instr_cnt);  // Print number of instructions run
-        print_flags(&state);         // Print flags
-        printf("            ");
+        printf("%012d ", instr_cnt);  // Print instruction count
+        print_flags(&state);
+        printf("%*c", 12, ' ');  // Pad spacing
         (*disasm_handlers[opcode])(state.mem, state.pc);
 
         // Emulate instuction

@@ -54,6 +54,8 @@ typedef struct {
     uint8_t sp_h;  // Stack pointer (high & low)
     uint8_t sp_l;
     condition_flags_t cf;
+    uint8_t interrupts_enabled;
+    uint8_t halted;
     uint8_t *mem;
 } emu_state_t;
 
@@ -65,14 +67,14 @@ void print_flags(emu_state_t *state) {
 
 void dump_state(emu_state_t *state) {
     printf(
-        "------------------ State ------------------\n"
+        "------------------ State -----------------\n"
         " a: %02x,  b: %02x,  c: %02x,  d: %02x,\n"
         " e: %02x,  h: %02x,  l: %02x,  flags: ",
         state->a, state->b, state->c, state->d, state->e, state->h, state->l);
     print_flags(state);
     printf(
         "\npc: %04x, (pc): %02x, sp: %04x, (sp): %02x\n"
-        "-------------------------------------------\n",
+        "------------------------------------------\n",
         state->pc, state->mem[state->pc], SP, MEM(SP));
 }
 
@@ -1077,7 +1079,10 @@ int emu_MOV_M_L(emu_state_t *state) {
     return 1;
 }
 
-EMU_UNIMPLEMENTED(emu_HLT)
+int emu_HLT(emu_state_t *state) {
+    state->halted = 1;
+    return 1;
+}
 
 int emu_MOV_M_A(emu_state_t *state) {
     MEM(HL) = state->a;
@@ -1630,7 +1635,16 @@ int emu_JPO(emu_state_t *state) {
     return (j) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_XTHL)
+int emu_XTHL(emu_state_t *state) {
+    uint8_t tmp_l = state->l;
+    uint8_t tmp_h = state->h;
+    state->l = MEM(SP);
+    state->h = MEM(SP + 1);
+    MEM(SP) = tmp_l;
+    MEM(SP + 1) = tmp_h;
+    return 1;
+}
+
 int emu_CPO(emu_state_t *state) {
     /* Call if parity odd (P = 0) */
     int c = state->cf.p == 0;
@@ -1730,7 +1744,10 @@ int emu_JP(emu_state_t *state) {
     return (j) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_DI)
+int emu_DI(emu_state_t *state) {
+    state->interrupts_enabled = 0;
+    return 1;
+}
 
 int emu_CP(emu_state_t *state) {
     int c = !state->cf.s;
@@ -1771,7 +1788,10 @@ int emu_RM(emu_state_t *state) {
     return (r) ? 3 : 1;
 }
 
-EMU_UNIMPLEMENTED(emu_SPHL)
+int emu_SPHL(emu_state_t *state) {
+    set_sp(state, HL);
+    return 1;
+}
 
 int emu_JM(emu_state_t *state) {
     int j = state->cf.s;
@@ -1779,7 +1799,10 @@ int emu_JM(emu_state_t *state) {
     return (j) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_EI)
+int emu_EI(emu_state_t *state) {
+    state->interrupts_enabled = 1;
+    return 1;
+}
 
 int emu_CM(emu_state_t *state) {
     int c = state->cf.s;
