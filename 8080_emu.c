@@ -483,7 +483,9 @@ int emu_STAX_B(emu_state_t *state) {
 }
 
 int emu_INX_B(emu_state_t *state) {
-    MEM(BC) += 1;
+    uint16_t new_bc = BC + 1;
+    RP_BC_RH = ((new_bc >> 8) & 0xff);
+    RP_BC_RL = (new_bc & 0xff);
     return 1;
 }
 
@@ -558,7 +560,9 @@ int emu_STAX_D(emu_state_t *state) {
 }
 
 int emu_INX_D(emu_state_t *state) {
-    MEM(DE) += 1;
+    uint16_t new_de = DE + 1;
+    RP_DE_RH = ((new_de >> 8) & 0xff);
+    RP_DE_RL = (new_de & 0xff);
     return 1;
 }
 
@@ -634,7 +638,9 @@ int emu_SHLD(emu_state_t *state) {
 }
 
 int emu_INX_H(emu_state_t *state) {
-    MEM(HL) += 1;
+    uint16_t new_hl = HL + 1;
+    RP_HL_RH = ((new_hl >> 8) & 0xff);
+    RP_HL_RL = (new_hl & 0xff);
     return 1;
 }
 
@@ -722,9 +728,7 @@ int emu_STA(emu_state_t *state) {
 }
 
 int emu_INX_SP(emu_state_t *state) {
-    // FIXME: This should increment the value of the register pair, not the
-    // memory contents (same with other INX instructions)
-    MEM(SP) += 1;
+    set_sp(state, SP + 1);
     return 1;
 }
 
