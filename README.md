@@ -2,33 +2,31 @@
 
 A simple 8080 emulator made with the goal of emulating space invaders. Based on and inspired by the guide at [emulator101](http://emulator101.com/).
 
+## Launch the emulator
+
+### Compile
+
+```
+gcc -g -O0 8080_main.c -o 8080_main
+```
+
+### Run
+
+The emulator takes in an optional parameter to specify the number of instructions to execute.
+
+```
+./8080_main [<stop_at>]
+```
+
 ## Notes
 
 ### Disassembler
 
-I _really_ wanted a way to define each instruction in a single line. I had initially wanted something along the lines of:
-
-```
-#define D8(...)
-#define D16(...)
-#define REG(...)
-#define ADDR(...)
-
-#define INSTR(instr_name, format) ...
-```
-
-Where the `format` could then be define using the `D8`, `D16`, `REG` and `ADDR` macros like:
-
-```
-INSTR(NOP)
-INSTR(LXI, REG(B), D16)
-...
-INSTR(SHLD, ADDR)
-```
-
-The solution I ended on defines an `INSTR_BASE` macro which is used to define macros for each instruction format, allowing them to pass in their own print statement. Then, each instruction handler is added to `disasm_handlers`, at their respective opcode index.
+Each instruction handler is defined using one of the `INSTR` macros, which handle the various instruction formats. Then, each instruction handler is added to `disasm_handlers`, at their respective opcode index.
 
 ### Emulator
+
+Like the disassembler, the emulation handlers are added to the `emu_handlers`, indexed by opcode. Common functionalities are moved into seperate functions to avoid code duplication. Unless explicitly mentioned, instructions _do not_ affect flags.
 
 #### Flags
 
@@ -37,3 +35,6 @@ The solution I ended on defines an `INSTR_BASE` macro which is used to define ma
 - Parity: if the module 2 sum of the bits of the result of the operation is 0, (i.e. result has even parity), this flag is set; otherwise it is reset.
 - Carry: If the instruction results in a carry (from addition), or a borrow  (from subtraction or comparison) out of the high-order bit, this flag is set, otherwise it is reset.
 - Auxiliary Carry: If the instruction caused a carry out of bit 3 and into bit 4 of the resulting value, the auxiliary carry is set; otherwise it is reset. This flag is affected by single precision additions, subtractions, increments, decrements, comparisons, and logical operations, but is principally used with additions and increments preceding a DAA (Decimal Adjust Accumulator) instruction.
+
+## References
+[Intel 8080 Microcomputer Systems User's Manual, September 1975](http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf)
