@@ -56,6 +56,8 @@ typedef struct {
     condition_flags_t cf;
     uint8_t interrupts_enabled;
     uint8_t halted;
+    void (*write_port)(uint8_t port, uint8_t data);
+    uint8_t (*read_port)(uint8_t port);
     uint8_t *mem;
 } emu_state_t;
 
@@ -1555,7 +1557,11 @@ int emu_JNC(emu_state_t *state) {
     return (j) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_OUT)
+int emu_OUT(emu_state_t *state) {
+    /* Write content of accumulator to specified port */
+    (*state->write_port)(DATA, state->a);
+    return 2;
+}
 
 int emu_CNC(emu_state_t *state) {
     int c = !state->cf.cy;
@@ -1594,7 +1600,11 @@ int emu_JC(emu_state_t *state) {
     return (j) ? 0 : 3;
 }
 
-EMU_UNIMPLEMENTED(emu_IN)
+int emu_IN(emu_state_t *state) {
+    /* Move the data from specified port to the accumulator */
+    state->a = (*state->read_port)(DATA);
+    return 2;
+}
 
 int emu_CC(emu_state_t *state) {
     int c = state->cf.cy;

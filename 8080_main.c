@@ -36,6 +36,33 @@ int read_file_to_buf(char *filename, uint8_t *buf, uint32_t offset) {
     return rc;
 }
 
+/*
+ * write_port: Device handler for writing data to I/O ports.
+ *
+ * Arguments:
+ *   port   - addr of port to write data to
+ *   data   - data to write to port
+ */
+void write_port(uint8_t port, uint8_t data) {
+    printf("::: Wrote to port %d: 0x%02x\n", port, data);
+}
+
+/*
+ * read_port: Device handler for reading data from I/O ports.
+ *
+ * Arguments:
+ *   port   - addr of port to read data from
+ *
+ * Returns:
+ *   data read from port
+ */
+uint8_t read_port(uint8_t port) {
+    uint8_t data = 0x00;
+    printf("::: Read from port %d: 0x%02x\n", port, data);
+
+    return data;
+}
+
 int main(int argc, char **argv) {
     unsigned int stop_at = 0;
     if (argc > 1) stop_at = atoi(argv[1]);
@@ -43,6 +70,8 @@ int main(int argc, char **argv) {
     int psize = 0;
     emu_state_t state = {0};
     state.interrupts_enabled = 1;  // Enable interrupts by default
+    state.write_port = write_port;
+    state.read_port = read_port;
     state.mem = malloc(0x8000);
 
     // Memory map information from:
