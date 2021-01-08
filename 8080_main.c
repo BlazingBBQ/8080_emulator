@@ -10,6 +10,9 @@
 #define SCREEN_HEIGHT (224)
 #define VRAM_START (0x2400)
 
+uint16_t shift_reg;
+uint8_t shift_reg_offset;
+
 /*
  * read_file_to_buf: Reads file into memory buffer at given offset.
  *
@@ -50,7 +53,27 @@ int read_file_to_buf(char *filename, uint8_t *buf, uint32_t offset) {
  *   data   - data to write to port
  */
 void write_port(uint8_t port, uint8_t data) {
-    printf("::: Wrote to port %d: 0x%02x\n", port, data);
+    switch (port) {
+        case 2:
+            /* Shift register offset */
+            shift_reg_offset = (data & 0b111);
+            break;
+        case 3:
+            /* Sounds */
+            break;
+        case 4:
+            /* Shift register */
+            shift_reg = (shift_reg >> 8) + (data << 8);
+            break;
+        case 5:
+            /* Sounds */
+            break;
+        case 6:
+            /* Watchdog */
+            break;
+        default:
+            printf("::: Wrote to port %d: 0x%02x\n", port, data);
+    }
 }
 
 /*
@@ -64,7 +87,46 @@ void write_port(uint8_t port, uint8_t data) {
  */
 uint8_t read_port(uint8_t port) {
     uint8_t data = 0x00;
-    printf("::: Read from port %d: 0x%02x\n", port, data);
+    switch (port) {
+        case 0:
+            /* Hardware mapped P1 inputs, never used in code */
+            // Fall-through to default case
+            // break;
+        case 1:
+            /* Inputs
+             * bit 0 = CREDIT (1 if deposit)
+             * bit 1 = 2P start (1 if pressed)
+             * bit 2 = 1P start (1 if pressed)
+             * bit 3 = Always 1
+             * bit 4 = 1P shot (1 if pressed)
+             * bit 5 = 1P left (1 if pressed)
+             * bit 6 = 1P right (1 if pressed)
+             * bit 7 = Not connected
+             */
+            data = (0 << 7) | (0 << 6) | (0 << 5) | (0 << 4) | (1 << 3) |
+                   (0 << 2) | (0 << 1) | (0 << 0);
+            break;
+        case 2:
+            /* Inputs
+             * bit 0 = DIP3 00 = 3 ships  10 = 5 ships
+             * bit 1 = DIP5 01 = 4 ships  11 = 6 ships
+             * bit 2 = Tilt
+             * bit 3 = DIP6 0 = extra ship at 1500, 1 = extra ship at 1000
+             * bit 4 = P2 shot (1 if pressed)
+             * bit 5 = P2 left (1 if pressed)
+             * bit 6 = P2 right (1 if pressed)
+             * bit 7 = DIP7 Coin info displayed in demo screen 0=ON
+             */
+            data = (0 << 7) | (0 << 6) | (0 << 5) | (0 << 4) | (1 << 3) |
+                   (0 << 2) | (0 << 1) | (0 << 0);
+            break;
+        case 3:
+            /* Shift register result */
+            data = (shift_reg >> (8 - shift_reg_offset)) & 0xff;
+            break;
+        default:
+            printf("::: Read from port %d: 0x%02x\n", port, data);
+    }
 
     return data;
 }
@@ -112,6 +174,7 @@ int main(int argc, char **argv) {
     if (argc > 1) verbose = atoi(argv[1]);
     if (argc > 2) stop_at = atoi(argv[2]);
 
+    shift_reg = 0x0000;
     int psize = 0;
     emu_state_t state = {0};
     state.interrupts_enabled = 1;  // Enable interrupts by default

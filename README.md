@@ -44,7 +44,7 @@ Like the disassembler, the emulation handlers are added to the `emu_handlers`, i
 - [ ] Proper machine timing (slow down to 2MHz)
     - [ ] Use correct number of cycles per instruction
 - [ ] I/O
-    - [ ] Shift register hardware (Write ports 2 & 4, Read port 3)
+    - [x] Shift register hardware (Write ports 2 & 4, Read port 3)
     - [ ] Player input
 - [ ] Sounds
 
