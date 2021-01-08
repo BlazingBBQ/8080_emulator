@@ -87,17 +87,17 @@ void print_screen(emu_state_t *state) {
         addr -= 0x1;
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < SCREEN_HEIGHT / 2; j++) {
-                wprintf(L"%lc", box[(!!(state->mem[addr + 0x20 * (j * 2)] &
-                                        (0x1 << (7 - i * 2)))
-                                     << 3) +
-                                    (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
-                                        (0x1 << (7 - i * 2)))
-                                     << 2) +
-                                    (!!(state->mem[addr + 0x20 * (j * 2)] &
-                                        (0x1 << (6 - i * 2)))
-                                     << 1) +
-                                    (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
-                                        (0x1 << (6 - i * 2))))]);
+                wprintf(L"%lc ", box[(!!(state->mem[addr + 0x20 * (j * 2)] &
+                                         (0x1 << (7 - i * 2)))
+                                      << 3) +
+                                     (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
+                                         (0x1 << (7 - i * 2)))
+                                      << 2) +
+                                     (!!(state->mem[addr + 0x20 * (j * 2)] &
+                                         (0x1 << (6 - i * 2)))
+                                      << 1) +
+                                     (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
+                                         (0x1 << (6 - i * 2))))]);
             }
             printf("\n");
         }
@@ -128,12 +128,13 @@ int main(int argc, char **argv) {
 
     unsigned int opcode;
     unsigned int instr_cnt = 0;
+    unsigned int last_rst = 0;
     while (state.pc < psize) {
         if (state.halted) continue;
 
         opcode = state.mem[state.pc];
 
-        if (verbose) {
+        if (verbose && instr_cnt % verbose == 0) {
             printf("%012d ", instr_cnt);  // Print instruction count
             print_flags(&state);
             printf("%*c", 12, ' ');  // Pad spacing
@@ -144,17 +145,23 @@ int main(int argc, char **argv) {
         state.pc += (*emu_handlers[opcode])(&state);
 
         // TODO: Use correct screen print interval
-        if (instr_cnt % 4000000 == 0) {
+        if (instr_cnt % 400000 == 0) {
             print_screen(&state);
         }
 
-        instr_cnt++;
-        if (stop_at > 0 && instr_cnt > stop_at) {
-            dump_state(&state);
-            break;
+        // Vertical sync interrupts
+        // TODO: Use proper timing here too...
+        // FIXME: Check if interrupts are enabled?
+        if (instr_cnt % 100000 == 0) {
+            emu_rst(&state, last_rst + 1);
+            last_rst = !last_rst;
         }
+
+        instr_cnt++;
+        if (stop_at > 0 && instr_cnt > stop_at) break;
     }
 
+    dump_state(&state);
     free(state.mem);
     return 0;
 }

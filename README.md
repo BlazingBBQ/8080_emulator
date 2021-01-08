@@ -43,8 +43,11 @@ Like the disassembler, the emulation handlers are added to the `emu_handlers`, i
 - [x] Draw graphics
 - [ ] Proper machine timing (slow down to 2MHz)
     - [ ] Use correct number of cycles per instruction
-- [ ] Player input
+- [ ] I/O
+    - [ ] Shift register hardware (Write ports 2 & 4, Read port 3)
+    - [ ] Player input
 - [ ] Sounds
 
 ## References
 [Intel 8080 Microcomputer Systems User's Manual, September 1975](http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf)
+[ComputerArcheology Space Invaders Hardware Overview](http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html)
