@@ -1,8 +1,14 @@
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 #include "8080_disasm.c"
 #include "8080_emu.c"
+
+#define SCREEN_WIDTH (256)
+#define SCREEN_HEIGHT (224)
+#define VRAM_START (0x2400)
 
 /*
  * read_file_to_buf: Reads file into memory buffer at given offset.
@@ -63,9 +69,48 @@ uint8_t read_port(uint8_t port) {
     return data;
 }
 
+/*
+ * bit0: lower right
+ * bit1: lower left
+ * bit2: upper right
+ * bit3: upper left
+ */
+wint_t box[16] = {0x0020, 0x2597, 0x2596, 0x2584, 0x259D, 0x2590,
+                  0x259E, 0x259F, 0x2598, 0x259A, 0x258C, 0x2599,
+                  0x2580, 0x259C, 0x259B, 0x2588};
+
+void print_screen(emu_state_t *state) {
+    printf("\e[1;1H\e[2J");  // Clear screen (ANSI terminals)
+
+    int addr = VRAM_START + SCREEN_WIDTH / 8;
+    do {
+        addr -= 0x1;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < SCREEN_HEIGHT / 2; j++) {
+                wprintf(L"%lc", box[(!!(state->mem[addr + 0x20 * (j * 2)] &
+                                        (0x1 << (7 - i * 2)))
+                                     << 3) +
+                                    (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
+                                        (0x1 << (7 - i * 2)))
+                                     << 2) +
+                                    (!!(state->mem[addr + 0x20 * (j * 2)] &
+                                        (0x1 << (6 - i * 2)))
+                                     << 1) +
+                                    (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
+                                        (0x1 << (6 - i * 2))))]);
+            }
+            printf("\n");
+        }
+    } while (addr > VRAM_START);
+}
+
 int main(int argc, char **argv) {
+    setlocale(LC_CTYPE, "");
+
+    unsigned int verbose = 0;
     unsigned int stop_at = 0;
-    if (argc > 1) stop_at = atoi(argv[1]);
+    if (argc > 1) verbose = atoi(argv[1]);
+    if (argc > 2) stop_at = atoi(argv[2]);
 
     int psize = 0;
     emu_state_t state = {0};
@@ -88,13 +133,20 @@ int main(int argc, char **argv) {
 
         opcode = state.mem[state.pc];
 
-        printf("%012d ", instr_cnt);  // Print instruction count
-        print_flags(&state);
-        printf("%*c", 12, ' ');  // Pad spacing
-        (*disasm_handlers[opcode])(state.mem, state.pc);
+        if (verbose) {
+            printf("%012d ", instr_cnt);  // Print instruction count
+            print_flags(&state);
+            printf("%*c", 12, ' ');  // Pad spacing
+            (*disasm_handlers[opcode])(state.mem, state.pc);
+        }
 
         // Emulate instuction
         state.pc += (*emu_handlers[opcode])(&state);
+
+        // TODO: Use correct screen print interval
+        if (instr_cnt % 4000000 == 0) {
+            print_screen(&state);
+        }
 
         instr_cnt++;
         if (stop_at > 0 && instr_cnt > stop_at) {

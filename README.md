@@ -12,10 +12,10 @@ gcc -g -O0 8080_main.c -o 8080_main
 
 ### Run
 
-The emulator takes in an optional parameter to specify the number of instructions to execute.
+The emulator takes in an optional parameters for verbosity and to specify the number of instructions to execute.
 
 ```
-./8080_main [<stop_at>]
+./8080_main [<verbose>] [<stop_at>]
 ```
 
 ## Notes
@@ -40,7 +40,7 @@ Like the disassembler, the emulation handlers are added to the `emu_handlers`, i
 
 - [x] Full 8080 instruction disassembly
 - [x] Full 8080 instruction emulation
-- [ ] Draw graphics
+- [x] Draw graphics
 - [ ] Proper machine timing (slow down to 2MHz)
     - [ ] Use correct number of cycles per instruction
 - [ ] Player input

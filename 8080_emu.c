@@ -481,6 +481,7 @@ void emu_rst(emu_state_t *state, uint8_t reset_num) {
     MEM(SP - 1) = PCH;
     MEM(SP - 2) = PCL;
     set_sp(state, SP - 2);
+    state->interrupts_enabled = 0;
     state->pc = 8 * reset_num;
 }
 
