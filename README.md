@@ -2,6 +2,8 @@
 
 A simple 8080 emulator made with the goal of emulating space invaders. Based on and inspired by the guide at [emulator101](http://emulator101.com/).
 
+![Preview Space Invaders Emulation](images/emulator-preview.png)
+
 ## Launch the emulator
 
 The Space Invader ROM files are omitted due to copyright. To run the emulator, add the `invaders.[e,f,g,h]` files to the `ROM` directory at the root of the project.

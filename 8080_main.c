@@ -140,30 +140,60 @@ uint8_t read_port(uint8_t port) {
 wint_t box[16] = {0x0020, 0x2597, 0x2596, 0x2584, 0x259D, 0x2590,
                   0x259E, 0x259F, 0x2598, 0x259A, 0x258C, 0x2599,
                   0x2580, 0x259C, 0x259B, 0x2588};
+/*
+ * bit0: lower half
+ * bit1: upper half
+ */
+wint_t h_box[4] = {0x0020, 0x2584, 0x2580, 0x2588};
 
 void print_screen(emu_state_t *state) {
-    printf("\e[1;1H\e[2J");  // Clear screen (ANSI terminals)
-
     int addr = VRAM_START + SCREEN_WIDTH / 8;
+
+    printf("\e[1;1H\e[2J");  // Clear screen (ANSI terminals)
+    wprintf(L"%lc", 0x250C);
+    for (int i = 0; i < 224; i++) wprintf(L"%lc", 0x2500);
+    wprintf(L"%lc\n", 0x2510);
     do {
+#if 0
+        /* Print using boxes split in 4 */
         addr -= 0x1;
         for (int i = 0; i < 4; i++) {
+            printf("|");
             for (int j = 0; j < SCREEN_HEIGHT / 2; j++) {
                 wprintf(L"%lc ", box[(!!(state->mem[addr + 0x20 * (j * 2)] &
                                          (0x1 << (7 - i * 2)))
                                       << 3) +
-                                     (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
+                                     (!!(state->mem[addr + 0x20 * (j * 2 +
+                                     1)] &
                                          (0x1 << (7 - i * 2)))
                                       << 2) +
                                      (!!(state->mem[addr + 0x20 * (j * 2)] &
                                          (0x1 << (6 - i * 2)))
                                       << 1) +
-                                     (!!(state->mem[addr + 0x20 * (j * 2 + 1)] &
+                                     (!!(state->mem[addr + 0x20 * (j * 2 +
+                                     1)] &
                                          (0x1 << (6 - i * 2))))]);
             }
-            printf("\n");
+            printf("|\n");
+        }
+#endif
+        /* Print using boxes split in 2 */
+        addr -= 0x1;
+        for (int i = 0; i < 4; i++) {
+            wprintf(L"%lc", 0x2502);
+            for (int j = 0; j < SCREEN_HEIGHT; j++) {
+                wprintf(L"%lc", h_box[(!!(state->mem[addr + 0x10 * j * 2] &
+                                          (0x1 << (7 - i * 2)))
+                                       << 1) +
+                                      (!!(state->mem[addr + 0x10 * j * 2] &
+                                          (0x1 << (6 - i * 2))))]);
+            }
+            wprintf(L"%lc\n", 0x2502);
         }
     } while (addr > VRAM_START);
+    wprintf(L"%lc", 0x2514);
+    for (int i = 0; i < 224; i++) wprintf(L"%lc", 0x2500);
+    wprintf(L"%lc\n", 0x2518);
 }
 
 int main(int argc, char **argv) {
