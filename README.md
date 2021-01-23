@@ -2,7 +2,7 @@
 
 A simple 8080 emulator made with the goal of emulating space invaders. Based on and inspired by the guide at [emulator101](http://emulator101.com/).
 
-![Preview Space Invaders Emulation](images/emulator-preview.png)
+<img src="images/emulator-preview.png" width="300">
 
 ## Launch the emulator
 
